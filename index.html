@@ -10,7 +10,6 @@
     :root {
       --midnight: #0a0e1a;
       --deep: #0d1329;
-      --star-dim: rgba(255,255,255,0.6);
     }
 
     html, body {
@@ -40,15 +39,16 @@
       to   { opacity: calc(var(--op, 0.5) * 0.2); transform: scale(0.6); }
     }
 
-    /* ── Hero headline ── */
+    /* ── Hero headline — pinned to top ── */
     #hero {
       position: fixed; inset: 0; z-index: 10;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: center; justify-content: flex-start;
+      padding-top: 2.2rem;
       pointer-events: none;
     }
     #hero h1 {
-      font-size: clamp(3rem, 10vw, 9rem);
+      font-size: clamp(2rem, 6.5vw, 5.5rem);
       font-weight: 900;
       letter-spacing: 0.04em;
       color: #ffffff;
@@ -60,8 +60,8 @@
       line-height: 1.1;
     }
     #hero p {
-      margin-top: 1.2rem;
-      font-size: clamp(0.8rem, 2vw, 1.1rem);
+      margin-top: 0.65rem;
+      font-size: clamp(0.65rem, 1.4vw, 0.9rem);
       color: rgba(200, 210, 255, 0.55);
       letter-spacing: 0.25em;
       text-transform: uppercase;
@@ -98,7 +98,7 @@
       color: rgba(210, 220, 255, 0.7);
       font-size: clamp(0.7rem, 1.5vw, 0.88rem);
       line-height: 1.7;
-      animation: floatSlop var(--fdur, 60s) linear forwards;
+      animation: floatSlop var(--fdur, 28s) linear forwards;
       pointer-events: none;
       box-shadow: 0 4px 40px rgba(0,0,0,0.4);
       will-change: transform, opacity;
@@ -111,19 +111,90 @@
       color: rgba(140, 160, 255, 0.45);
       margin-bottom: 0.5rem;
     }
+
+    /* ── Floating video cards ── */
+    .slop-video {
+      position: fixed;
+      z-index: 5;
+      width: min(290px, 82vw);
+      border-radius: 1rem;
+      background: rgba(10, 14, 35, 0.9);
+      border: 1px solid rgba(255,255,255,0.09);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      animation: floatSlop var(--fdur, 28s) linear forwards;
+      pointer-events: none;
+      box-shadow: 0 8px 60px rgba(0,0,0,0.55);
+      overflow: hidden;
+      will-change: transform, opacity;
+    }
+    .thumb-bg {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3));
+      background-size: 300% 300%;
+      animation: gradShift 6s ease infinite;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes gradShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .play-overlay {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.88);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem;
+      color: #0a0e1a;
+      padding-left: 3px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.45);
+    }
+    .duration-badge {
+      position: absolute;
+      bottom: 5px; right: 7px;
+      background: rgba(0,0,0,0.78);
+      color: #fff;
+      font-size: 0.62rem;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 1px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+    }
+    .video-meta {
+      padding: 0.6rem 0.8rem 0.72rem;
+    }
+    .video-title {
+      font-size: 0.76rem;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      color: rgba(225, 230, 255, 0.88);
+      line-height: 1.4;
+      margin-bottom: 0.3rem;
+    }
+    .video-channel {
+      font-size: 0.62rem;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      color: rgba(140, 150, 200, 0.5);
+      letter-spacing: 0.03em;
+    }
+
+    /* shared float animation */
     @keyframes floatSlop {
-      0%   { opacity: 0;    transform: translateY(0)   scale(0.92); }
+      0%   { opacity: 0;    transform: translateY(0)    scale(0.92); }
       8%   { opacity: 1; }
       88%  { opacity: 1; }
-      100% { opacity: 0;    transform: translateY(-120px) scale(0.95); }
+      100% { opacity: 0;    transform: translateY(-110px) scale(0.96); }
     }
 
     /* Shooting stars */
     .shoot {
       position: fixed;
       z-index: 2;
-      width: 2px;
-      height: 2px;
+      width: 2px; height: 2px;
       background: #fff;
       border-radius: 50%;
       pointer-events: none;
@@ -177,7 +248,6 @@
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    // subtle gradient sky
     const grad = ctx.createLinearGradient(0, 0, 0, H);
     grad.addColorStop(0,   '#08091a');
     grad.addColorStop(0.5, '#0a0e1a');
@@ -367,9 +437,84 @@ const SLOP = [
   },
 ];
 
+// ── Video slop corpus ──────────────────────────────────────────────────────
+const VIDEO_SLOP = [
+  {
+    title: "i let ai plan my entire morning for 7 days and i cried on day 3",
+    channel: "optimized.mel · 2.4M views",
+    duration: "14:22",
+    palette: ["#3a1c71", "#d76d77", "#ffaf7b"]
+  },
+  {
+    title: "ASMR ✨ AI whispers your affirmations back to you (3 hours, binaural)",
+    channel: "DigitalWhispers · 1.1M views",
+    duration: "3:02:17",
+    palette: ["#00d2ff", "#3a7bd5", "#6a11cb"]
+  },
+  {
+    title: "slow morning routine for high achievers who have given up achieving",
+    channel: "MindfulAlgorithm · 892K views",
+    duration: "22:08",
+    palette: ["#f093fb", "#f5576c", "#4facfe"]
+  },
+  {
+    title: "what my AI therapist told me about my attachment style (not sponsored)",
+    channel: "FeelingsData · 3.7M views",
+    duration: "18:44",
+    palette: ["#a18cd1", "#fbc2eb", "#c471ed"]
+  },
+  {
+    title: "i asked chatgpt to write all my apology texts for two weeks",
+    channel: "LanguageModelLove · 561K views",
+    duration: "11:29",
+    palette: ["#0ba360", "#3cba92", "#3a7bd5"]
+  },
+  {
+    title: "rating every AI-generated sleep story (tier list) (i fell asleep making this)",
+    channel: "ContentRater · 774K views",
+    duration: "47:03",
+    palette: ["#f7971e", "#ffd200", "#ff6b6b"]
+  },
+  {
+    title: "the aesthetic of nothing: 8 hours of lofi with no content whatsoever",
+    channel: "VoidHours · 4.2M views",
+    duration: "8:00:00",
+    palette: ["#232526", "#414345", "#1a1a2e"]
+  },
+  {
+    title: "AI generated 1000 niche hobbies and I ranked them while dissociating",
+    channel: "NicheContent · 2.1M views",
+    duration: "34:52",
+    palette: ["#ee9ca7", "#ffdde1", "#a18cd1"]
+  },
+  {
+    title: "✨ my 47-step nighttime routine (AI-optimized, evidence-based, completely unhinged)",
+    channel: "RoutineGirl · 6.8M views",
+    duration: "28:19",
+    palette: ["#c471ed", "#f64f59", "#12c2e9"]
+  },
+  {
+    title: "this AI predicted my entire personality from my Spotify Wrapped",
+    channel: "DataSelf · 1.9M views",
+    duration: "9:41",
+    palette: ["#43e97b", "#38f9d7", "#3a7bd5"]
+  },
+  {
+    title: "cozy AI reads me a bedtime story about a sad robot who just wants to vibe",
+    channel: "SleepContent · 3.3M views",
+    duration: "52:10",
+    palette: ["#667eea", "#764ba2", "#f093fb"]
+  },
+  {
+    title: "I trained an AI on my journal and now it knows me better than I do (part 4)",
+    channel: "SelfData · 1.4M views",
+    duration: "31:07",
+    palette: ["#f77062", "#fe5196", "#3a7bd5"]
+  },
+];
+
 // ── Floating slop ──────────────────────────────────────────────────────────
 let slopIndex = 0;
-const usedPositions = [];
 
 function shuffle(arr) {
   const a = [...arr];
@@ -402,12 +547,11 @@ function spawnSlop() {
   const x = margin + Math.random() * Math.max(0, window.innerWidth  - blobW - margin * 2);
   const y = margin + Math.random() * Math.max(0, window.innerHeight - blobH - margin * 2);
 
-  const dur = 35 + Math.random() * 40;
+  const dur = 18 + Math.random() * 16;
   el.style.left = x + 'px';
   el.style.top  = y + 'px';
   el.style.setProperty('--fdur', dur + 's');
 
-  // slight random tilt
   const tilt = (Math.random() - 0.5) * 4;
   el.style.transform = `rotate(${tilt}deg)`;
 
@@ -417,16 +561,60 @@ function spawnSlop() {
   setTimeout(() => el.remove(), (dur + 1) * 1000);
 }
 
-// Stagger initial blobs then keep spawning
-const CONCURRENT = 4;
+function spawnVideoSlop() {
+  const item = VIDEO_SLOP[Math.floor(Math.random() * VIDEO_SLOP.length)];
+  const el = document.createElement('div');
+  el.className = 'slop-video';
+
+  const cardW = Math.min(290, window.innerWidth * 0.82);
+  const cardH = cardW * (9 / 16) + 75;
+  const margin = 20;
+
+  const x = margin + Math.random() * Math.max(0, window.innerWidth  - cardW - margin * 2);
+  const y = margin + Math.random() * Math.max(0, window.innerHeight - cardH - margin * 2);
+
+  const dur = 18 + Math.random() * 16;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  el.style.setProperty('--fdur', dur + 's');
+
+  const tilt = (Math.random() - 0.5) * 5;
+  el.style.transform = `rotate(${tilt}deg)`;
+
+  const [c1, c2, c3] = item.palette;
+  el.innerHTML = `
+    <div class="thumb-bg" style="--c1:${c1};--c2:${c2};--c3:${c3}">
+      <div class="play-overlay">&#9654;</div>
+      <div class="duration-badge">${item.duration}</div>
+    </div>
+    <div class="video-meta">
+      <div class="video-title">${item.title}</div>
+      <div class="video-channel">${item.channel}</div>
+    </div>
+  `;
+
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), (dur + 1) * 1000);
+}
+
+function spawnMixed() {
+  if (Math.random() < 0.38) {
+    spawnVideoSlop();
+  } else {
+    spawnSlop();
+  }
+}
+
+// Fill screen quickly, then keep a steady stream
+const CONCURRENT = 7;
 for (let i = 0; i < CONCURRENT; i++) {
-  setTimeout(spawnSlop, i * 2800);
+  setTimeout(spawnMixed, i * 1100);
 }
-function scheduleNextSlop() {
-  spawnSlop();
-  setTimeout(scheduleNextSlop, 5000 + Math.random() * 6000);
+function scheduleNext() {
+  spawnMixed();
+  setTimeout(scheduleNext, 2200 + Math.random() * 2800);
 }
-setTimeout(scheduleNextSlop, CONCURRENT * 2800);
+setTimeout(scheduleNext, CONCURRENT * 1100);
 
 
 // ── White Noise (Web Audio API) ────────────────────────────────────────────
@@ -445,7 +633,6 @@ function buildNoise(ctx) {
   source.buffer = buffer;
   source.loop   = true;
 
-  // gentle low-pass so it's smoother / less harsh
   const filter = ctx.createBiquadFilter();
   filter.type  = 'lowpass';
   filter.frequency.value = 800;

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SLOP 'TIL YOU DROP</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --midnight: #0a0e1a;
+      --deep: #0d1329;
+      --star-dim: rgba(255,255,255,0.6);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--midnight);
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #fff;
+      cursor: default;
+      user-select: none;
+    }
+
+    /* ── Stars ── */
+    #stars {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle var(--dur, 3s) ease-in-out infinite alternate;
+      opacity: var(--op, 0.5);
+    }
+    @keyframes twinkle {
+      from { opacity: var(--op, 0.5); transform: scale(1); }
+      to   { opacity: calc(var(--op, 0.5) * 0.2); transform: scale(0.6); }
+    }
+
+    /* ── Hero headline ── */
+    #hero {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    #hero h1 {
+      font-size: clamp(3rem, 10vw, 9rem);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      color: #ffffff;
+      text-shadow:
+        0 0 40px rgba(140, 160, 255, 0.6),
+        0 0 80px rgba(100, 120, 255, 0.3),
+        0 2px 4px rgba(0,0,0,0.8);
+      text-align: center;
+      line-height: 1.1;
+    }
+    #hero p {
+      margin-top: 1.2rem;
+      font-size: clamp(0.8rem, 2vw, 1.1rem);
+      color: rgba(200, 210, 255, 0.55);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+
+    /* ── White noise button ── */
+    #noise-btn {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 100;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.55);
+      padding: 0.5rem 1.1rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+      pointer-events: all;
+    }
+    #noise-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    #noise-btn.on { color: rgba(160, 200, 255, 0.9); border-color: rgba(140,180,255,0.35); }
+
+    /* ── Floating slop blobs ── */
+    .slop {
+      position: fixed;
+      z-index: 5;
+      max-width: min(420px, 90vw);
+      padding: 1.2rem 1.5rem;
+      border-radius: 1.2rem;
+      background: rgba(15, 20, 45, 0.72);
+      border: 1px solid rgba(255,255,255,0.07);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: rgba(210, 220, 255, 0.7);
+      font-size: clamp(0.7rem, 1.5vw, 0.88rem);
+      line-height: 1.7;
+      animation: floatSlop var(--fdur, 60s) linear forwards;
+      pointer-events: none;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+      will-change: transform, opacity;
+    }
+    .slop .label {
+      display: block;
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(140, 160, 255, 0.45);
+      margin-bottom: 0.5rem;
+    }
+    @keyframes floatSlop {
+      0%   { opacity: 0;    transform: translateY(0)   scale(0.92); }
+      8%   { opacity: 1; }
+      88%  { opacity: 1; }
+      100% { opacity: 0;    transform: translateY(-120px) scale(0.95); }
+    }
+
+    /* Shooting stars */
+    .shoot {
+      position: fixed;
+      z-index: 2;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: shoot var(--sdur, 1s) linear forwards;
+    }
+    @keyframes shoot {
+      0%   { opacity: 1; transform: translate(0,0) scaleX(1); box-shadow: 0 0 6px 2px rgba(200,210,255,0.7), -60px 0 30px 0 rgba(200,210,255,0.15); }
+      100% { opacity: 0; transform: translate(calc(var(--sx)*1px), calc(var(--sy)*1px)) scaleX(1); box-shadow: 0 0 2px 1px rgba(200,210,255,0.3), -200px 0 60px 0 rgba(200,210,255,0.0); }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div id="hero">
+  <h1>SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
+  <p>drift into algorithmic slumber</p>
+</div>
+
+<button id="noise-btn" onclick="toggleNoise()">&#9654; white noise</button>
+
+<script>
+// ── Starfield ──────────────────────────────────────────────────────────────
+(function () {
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function makeStars() {
+    stars = [];
+    const count = Math.floor((W * H) / 3000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.4 + 0.2,
+        base: Math.random() * 0.7 + 0.1,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 0.4 + 0.1,
+      });
+    }
+  }
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // subtle gradient sky
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0,   '#08091a');
+    grad.addColorStop(0.5, '#0a0e1a');
+    grad.addColorStop(1,   '#0c1128');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    t += 0.012;
+    for (const s of stars) {
+      const op = s.base * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${op.toFixed(3)})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', () => { resize(); makeStars(); });
+  resize(); makeStars(); draw();
+
+  // Shooting stars
+  function shoot() {
+    const el = document.createElement('div');
+    el.className = 'shoot';
+    const startX = Math.random() * W * 1.2;
+    const startY = Math.random() * H * 0.5;
+    const angle  = (Math.random() * 30 + 15) * (Math.PI / 180);
+    const dist   = 300 + Math.random() * 400;
+    el.style.left = startX + 'px';
+    el.style.top  = startY + 'px';
+    el.style.setProperty('--sx', Math.round(Math.cos(angle) * dist));
+    el.style.setProperty('--sy', Math.round(Math.sin(angle) * dist));
+    const dur = 0.6 + Math.random() * 0.8;
+    el.style.setProperty('--sdur', dur + 's');
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000 + 200);
+  }
+  function scheduleShoot() {
+    shoot();
+    setTimeout(scheduleShoot, 4000 + Math.random() * 12000);
+  }
+  setTimeout(scheduleShoot, 2000);
+})();
+
+// ── AI Slop corpus ─────────────────────────────────────────────────────────
+const SLOP = [
+  {
+    tag: "AI wellness tip",
+    text: "Remember to hydrate your inner child by drinking a full glass of water while visualizing your best self emerging from a chrysalis of radical self-acceptance."
+  },
+  {
+    tag: "AI recipe",
+    text: "Cozy Midnight Oat Bowl: combine 1 cup rolled oats with oat milk, a drizzle of local honey, a pinch of cardamom, and the quiet understanding that tomorrow is a new beginning."
+  },
+  {
+    tag: "AI poem",
+    text: "The moon is a notification\nyou cannot dismiss.\nEvery star a pixel\nin the universe's dream feed.\nSleep now.\nThe algorithm loves you."
+  },
+  {
+    tag: "AI productivity tip",
+    text: "Before bed, write down three things you are grateful for, two things you will accomplish tomorrow, and one password you should really update."
+  },
+  {
+    tag: "AI mindfulness",
+    text: "Close your eyes. Imagine a warm linen duvet that was manufactured sustainably in Portugal. Notice how it smells of lavender and venture capital."
+  },
+  {
+    tag: "AI haiku",
+    text: "soft gradient sky\nthe chatbot knows your sorrows\nrefresh and try again"
+  },
+  {
+    tag: "AI sleep fact",
+    text: "Scientists have discovered that humans who sleep between 7–9 hours per night are 34% more likely to describe their morning as 'crisp.'"
+  },
+  {
+    tag: "AI affirmation",
+    text: "You are doing an amazing job simply by existing in this particular configuration of matter. Your unique perspective adds genuine value to the conversation."
+  },
+  {
+    tag: "AI travel writing",
+    text: "Nestled between two fog-kissed hills, the village of Somnhaven offers artisan bread, unhurried locals, and the particular silence of a place that has never heard of content strategy."
+  },
+  {
+    tag: "AI dream journal",
+    text: "I dreamed I was a language model dreaming of a language model. Each layer of the dream was slightly more coherent but far less interesting than the one before."
+  },
+  {
+    tag: "AI meditation",
+    text: "Breathe in for four counts. Hold for seven. Exhale for eight. You have successfully completed the 4-7-8 breathing technique. Please rate your experience: ⭐⭐⭐⭐⭐"
+  },
+  {
+    tag: "AI nature writing",
+    text: "The river does not hustle. The river does not grind. The river merely flows, unbothered, toward the sea, optimizing for nothing, converting no one."
+  },
+  {
+    tag: "AI bedtime story",
+    text: "Once upon a time there was a small bear who had everything he needed: a warm cave, a jar of honey, and a comfortable uncertainty about the nature of consciousness."
+  },
+  {
+    tag: "AI interior design",
+    text: "For a restful bedroom, choose muted tones that evoke concepts rather than colors — 'early fog,' 'considered slate,' 'the idea of linen.'"
+  },
+  {
+    tag: "AI horoscope",
+    text: "Mercury is in retrograde, which means nothing cosmologically but may provide useful emotional cover for the emails you have not yet sent."
+  },
+  {
+    tag: "AI life coach",
+    text: "The version of you that wakes up tomorrow has the opportunity to be 1% better than the version of you that is reading this sentence. What an incredible gift."
+  },
+  {
+    tag: "AI chef's note",
+    text: "This soup is best eaten slowly, in the company of a book you have been meaning to finish, with a candle that smells like a memory you can't quite place."
+  },
+  {
+    tag: "AI poem",
+    text: "I asked the machine what beauty was\nIt returned seventeen bullet points\nand a suggested follow-up question.\nI accepted the follow-up.\nWe talked until 3 a.m."
+  },
+  {
+    tag: "AI sleep science",
+    text: "Your body temperature naturally drops 1–2°F during sleep onset. Think of yourself as a particularly thoughtful piece of bread, cooling on a rack."
+  },
+  {
+    tag: "AI affirmation",
+    text: "Comparison is the thief of joy, but comparison is also how large language models learn, so perhaps comparison is simply a necessary step in becoming."
+  },
+  {
+    tag: "AI walking guide",
+    text: "Take a slow walk outside and notice five things you can see, four you can hear, three you can feel, two you can smell, and one existential question you can table until morning."
+  },
+  {
+    tag: "AI bedtime story",
+    text: "The moon asked the ocean, 'Do you ever get tired of following me?' The ocean said, 'I don't follow you. We just have a thing.' They were both correct."
+  },
+  {
+    tag: "AI journaling prompt",
+    text: "Write about a time you felt truly at rest. Don't overthink it. The words don't need to be good. They just need to arrive."
+  },
+  {
+    tag: "AI plant care",
+    text: "Your pothos doesn't need you to be your best self. It needs indirect light and water every 1–2 weeks. It is, perhaps, the healthiest relationship in your home."
+  },
+  {
+    tag: "AI dream analysis",
+    text: "Dreaming of falling typically indicates a fear of losing control, a magnesium deficiency, or that you fell asleep watching a video about skydiving."
+  },
+  {
+    tag: "AI poem",
+    text: "Nothing is curated tonight.\nThe stars are just there.\nThe dark is just dark.\nYou are permitted to stop optimizing\nfor the next few hours."
+  },
+  {
+    tag: "AI nutrition",
+    text: "Tart cherry juice contains melatonin. Warm milk contains tryptophan. Chamomile contains apigenin. Your body contains 37 trillion cells, all of them ready for bed."
+  },
+  {
+    tag: "AI mindfulness",
+    text: "Imagine you are a cloud. You don't have to do anything. You don't have to be any particular shape. You can simply drift, casting soft shadows on nothing in particular."
+  },
+  {
+    tag: "AI history",
+    text: "Before alarm clocks, people relied on 'knocker-uppers' — individuals paid to tap on windows with long sticks. Imagine that as your notification strategy."
+  },
+  {
+    tag: "AI affirmation",
+    text: "You have arrived at the end of this day. It is okay to close the tabs. All of them. The tabs will still be there. You can reopen them. But you don't have to."
+  },
+  {
+    tag: "AI sound design",
+    text: "The most soothing sounds, ranked: 1. Rain on a skylight. 2. Pages turning. 3. A cat settling. 4. White noise. 5. An AI explaining that it doesn't have feelings, but appreciates yours."
+  },
+  {
+    tag: "AI bedtime story",
+    text: "The lighthouse keeper lit the lamp each night not because ships were coming but because the ritual of it meant the day had an ending. She slept very well."
+  },
+  {
+    tag: "AI wellness",
+    text: "Sleep hygiene experts recommend: a cool room, a dark room, a quiet room. Consider also: a room without the low hum of ambient societal anxiety. Harder to source."
+  },
+  {
+    tag: "AI haiku",
+    text: "the model hallucinates\na mountain that doesn't exist\nyou dream of it anyway"
+  },
+  {
+    tag: "AI self-help",
+    text: "You don't need to earn rest. Rest is not a reward for productivity. Rest is infrastructure. Without it, the rest of you runs on degraded performance."
+  },
+];
+
+// ── Floating slop ──────────────────────────────────────────────────────────
+let slopIndex = 0;
+const usedPositions = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let shuffled = shuffle(SLOP);
+
+function nextSlop() {
+  if (slopIndex >= shuffled.length) {
+    shuffled = shuffle(SLOP);
+    slopIndex = 0;
+  }
+  return shuffled[slopIndex++];
+}
+
+function spawnSlop() {
+  const item = nextSlop();
+  const el = document.createElement('div');
+  el.className = 'slop';
+
+  const blobW = Math.min(420, window.innerWidth * 0.88);
+  const blobH = 130;
+  const margin = 20;
+
+  const x = margin + Math.random() * Math.max(0, window.innerWidth  - blobW - margin * 2);
+  const y = margin + Math.random() * Math.max(0, window.innerHeight - blobH - margin * 2);
+
+  const dur = 35 + Math.random() * 40;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  el.style.setProperty('--fdur', dur + 's');
+
+  // slight random tilt
+  const tilt = (Math.random() - 0.5) * 4;
+  el.style.transform = `rotate(${tilt}deg)`;
+
+  el.innerHTML = `<span class="label">${item.tag}</span>${item.text.replace(/\n/g, '<br>')}`;
+  document.body.appendChild(el);
+
+  setTimeout(() => el.remove(), (dur + 1) * 1000);
+}
+
+// Stagger initial blobs then keep spawning
+const CONCURRENT = 4;
+for (let i = 0; i < CONCURRENT; i++) {
+  setTimeout(spawnSlop, i * 2800);
+}
+function scheduleNextSlop() {
+  spawnSlop();
+  setTimeout(scheduleNextSlop, 5000 + Math.random() * 6000);
+}
+setTimeout(scheduleNextSlop, CONCURRENT * 2800);
+
+
+// ── White Noise (Web Audio API) ────────────────────────────────────────────
+let audioCtx = null;
+let noiseNode = null;
+let gainNode  = null;
+let noiseOn   = false;
+
+function buildNoise(ctx) {
+  const bufferSize = ctx.sampleRate * 3;
+  const buffer     = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data       = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+  const source  = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop   = true;
+
+  // gentle low-pass so it's smoother / less harsh
+  const filter = ctx.createBiquadFilter();
+  filter.type  = 'lowpass';
+  filter.frequency.value = 800;
+
+  source.connect(filter);
+  return { source, filter };
+}
+
+function toggleNoise() {
+  const btn = document.getElementById('noise-btn');
+  if (!noiseOn) {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      gainNode  = audioCtx.createGain();
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const { source, filter } = buildNoise(audioCtx);
+    filter.connect(gainNode);
+    source.start();
+    noiseNode = source;
+
+    gainNode.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 1.5);
+
+    noiseOn = true;
+    btn.textContent = '◼ white noise';
+    btn.classList.add('on');
+  } else {
+    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
+    setTimeout(() => { if (noiseNode) { noiseNode.stop(); noiseNode = null; } }, 1400);
+    noiseOn = false;
+    btn.textContent = '▶ white noise';
+    btn.classList.remove('on');
+  }
+}
+</script>
+</body>
+</html>

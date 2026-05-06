@@ -5,340 +5,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SLOP 'TIL YOU DROP</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       width: 100%; height: 100%;
-      overflow: hidden;
-      background: #03040d;
-      font-family: Georgia, 'Times New Roman', serif;
+      background: #0a0f2c;
       color: #fff;
-      cursor: default;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
       user-select: none;
     }
 
-    #stars {
-      position: fixed; inset: 0; z-index: 0;
-      pointer-events: none;
-    }
-
-    /* ── Nebulae ── */
-    .nebula {
-      position: fixed;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 1;
-      mix-blend-mode: screen;
-      animation: nebulaPulse var(--np, 22s) ease-in-out infinite alternate;
-      will-change: opacity, transform;
-    }
-    @keyframes nebulaPulse {
-      from { opacity: var(--na, 0.09); transform: scale(1); }
-      to   { opacity: var(--nb, 0.17); transform: scale(1.14); }
-    }
-
-    /* ── Hero at top ── */
-    #hero {
-      position: fixed; inset: 0; z-index: 10;
+    /* ── Centered text stage ── */
+    #stage {
+      position: fixed; inset: 0;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-start;
-      padding-top: 2.2rem;
-      pointer-events: none;
-    }
-    #hero h1 {
-      font-size: clamp(2rem, 6.5vw, 5.5rem);
-      font-weight: 900;
-      letter-spacing: 0.04em;
-      color: #fff;
-      text-shadow:
-        0 0 50px rgba(130, 150, 255, 0.7),
-        0 0 120px rgba(100, 120, 255, 0.35),
-        0 2px 6px rgba(0,0,0,0.95);
+      align-items: center; justify-content: center;
+      padding: 3rem 2rem 5rem;
       text-align: center;
-      line-height: 1.1;
-    }
-    #hero p {
-      margin-top: 0.65rem;
-      font-size: clamp(0.65rem, 1.4vw, 0.9rem);
-      color: rgba(200, 210, 255, 0.45);
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
+      opacity: 1;
+      transition: opacity 1.4s ease;
     }
 
-    /* ── Floating slop blobs ── */
-    .slop {
+    #tag {
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.22);
+      margin-bottom: 1.4rem;
+    }
+
+    #text {
+      font-size: clamp(1.25rem, 3vw, 2.1rem);
+      line-height: 1.75;
+      color: #fff;
+      max-width: min(700px, 88vw);
+      font-weight: 300;
+    }
+
+    /* ── Bottom controls ── */
+    #controls {
       position: fixed;
-      z-index: 5;
-      max-width: min(420px, 90vw);
-      padding: 1.2rem 1.5rem;
-      border-radius: 1.2rem;
-      background: rgba(8, 11, 32, 0.72);
-      border: 1px solid rgba(255,255,255,0.055);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      color: rgba(210, 220, 255, 0.72);
-      font-size: clamp(0.7rem, 1.5vw, 0.88rem);
-      line-height: 1.78;
-      animation: floatSlop var(--fdur, 28s) linear forwards;
-      pointer-events: none;
-      box-shadow: 0 4px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.035);
-      will-change: transform, opacity;
-    }
-    .slop .label {
-      display: block;
-      font-size: 0.58rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(140, 160, 255, 0.38);
-      margin-bottom: 0.5rem;
-    }
-    @keyframes floatSlop {
-      0%   { opacity: 0; transform: translateY(0) scale(0.92); }
-      8%   { opacity: 1; }
-      88%  { opacity: 1; }
-      100% { opacity: 0; transform: translateY(-110px) scale(0.96); }
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1.4rem;
+      z-index: 10;
     }
 
-    /* ── Controls ── */
-    #noise-btn {
-      position: fixed; bottom: 2rem; right: 2rem; z-index: 100;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.13);
-      color: rgba(255,255,255,0.5);
-      padding: 0.48rem 1.1rem;
-      border-radius: 99px;
-      font-size: 0.74rem;
+    #controls button {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.25);
+      font-size: 0.78rem;
       letter-spacing: 0.1em;
       cursor: pointer;
-      transition: background 0.3s, color 0.3s;
-    }
-    #noise-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
-    #noise-btn.on { color: rgba(160,200,255,0.9); border-color: rgba(140,180,255,0.35); }
-
-    #api-wrap {
-      position: fixed; bottom: 2rem; left: 2rem; z-index: 100;
-      display: flex; gap: 0.5rem; align-items: center;
-    }
-    #api-input {
-      background: rgba(255,255,255,0.055);
-      border: 1px solid rgba(255,255,255,0.11);
-      color: rgba(255,255,255,0.55);
-      padding: 0.45rem 0.95rem;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
-      width: 215px;
-      outline: none;
+      padding: 0.35rem 0.5rem;
+      transition: color 0.25s;
       font-family: inherit;
-      transition: border-color 0.3s, background 0.3s;
     }
-    #api-input::placeholder { color: rgba(255,255,255,0.24); }
-    #api-input:focus { border-color: rgba(140,180,255,0.38); background: rgba(255,255,255,0.08); }
-    #api-input.live { border-color: rgba(80,200,140,0.45); color: rgba(170,255,200,0.72); }
-    #api-save {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.48);
-      padding: 0.45rem 0.85rem;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.2s, color 0.2s;
-    }
-    #api-save:hover { background: rgba(255,255,255,0.12); color: #fff; }
-
-    /* ── Shooting stars ── */
-    .shoot {
-      position: fixed; z-index: 2;
-      width: 2px; height: 2px;
-      background: #fff; border-radius: 50%;
-      pointer-events: none;
-      animation: shoot var(--sdur, 1s) linear forwards;
-    }
-    @keyframes shoot {
-      0%   { opacity: 1; transform: translate(0,0); box-shadow: 0 0 6px 2px rgba(200,210,255,0.7), -60px 0 30px 0 rgba(200,210,255,0.15); }
-      100% { opacity: 0; transform: translate(calc(var(--sx)*1px), calc(var(--sy)*1px)); box-shadow: 0 0 2px 1px rgba(200,210,255,0.2); }
-    }
+    #controls button:hover { color: rgba(255, 255, 255, 0.55); }
+    #noise-btn.on { color: rgba(180, 210, 255, 0.55); }
   </style>
 </head>
 <body>
 
-<canvas id="stars"></canvas>
-
-<!-- Nebulae: purple top-left, blue bottom-right, magenta center, teal top-right, indigo bottom-left -->
-<div class="nebula" style="width:780px;height:780px;left:-180px;top:-220px;background:radial-gradient(circle,rgba(75,25,185,1) 0%,transparent 68%);--np:25s;--na:0.10;--nb:0.19;filter:blur(100px)"></div>
-<div class="nebula" style="width:650px;height:650px;right:-120px;bottom:30px;background:radial-gradient(circle,rgba(18,55,165,1) 0%,transparent 68%);--np:31s;--na:0.08;--nb:0.16;filter:blur(95px)"></div>
-<div class="nebula" style="width:520px;height:520px;left:38%;top:18%;background:radial-gradient(circle,rgba(155,25,95,1) 0%,transparent 65%);--np:21s;--na:0.06;--nb:0.13;filter:blur(90px)"></div>
-<div class="nebula" style="width:460px;height:460px;right:12%;top:-90px;background:radial-gradient(circle,rgba(15,115,145,1) 0%,transparent 65%);--np:28s;--na:0.07;--nb:0.14;filter:blur(85px)"></div>
-<div class="nebula" style="width:420px;height:420px;left:8%;bottom:8%;background:radial-gradient(circle,rgba(50,15,135,1) 0%,transparent 65%);--np:23s;--na:0.08;--nb:0.15;filter:blur(88px)"></div>
-
-<div id="hero">
-  <h1>SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
-  <p>drift into algorithmic slumber</p>
+<div id="stage">
+  <div id="tag"></div>
+  <div id="text"></div>
 </div>
 
-<div id="api-wrap">
-  <input id="api-input" type="password" placeholder="Anthropic API key for live AI slop" />
-  <button id="api-save" onclick="saveKey()">connect</button>
+<div id="controls">
+  <button id="pause-btn" onclick="togglePause()">&#9646;&#9646;</button>
+  <button id="noise-btn" onclick="toggleNoise()">&#9654; noise</button>
 </div>
-
-<button id="noise-btn" onclick="toggleNoise()">&#9654; white noise</button>
 
 <script>
-// ── Starfield ────────────────────────────────────────────────────────────────
-(function () {
-  const canvas = document.getElementById('stars');
-  const ctx = canvas.getContext('2d');
-  let W, H, stars = [];
+// ── Slop display ─────────────────────────────────────────────────────────────
+const stage   = document.getElementById('stage');
+const tagEl   = document.getElementById('tag');
+const textEl  = document.getElementById('text');
+const pauseBtn = document.getElementById('pause-btn');
 
-  function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
+let items  = [];
+let idx    = 0;
+let timer  = null;
+let paused = false;
 
-  function makeStars() {
-    stars = [];
-    const n = Math.floor((W * H) / 2000);
-    for (let i = 0; i < n; i++) {
-      stars.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: Math.random() * 1.5 + 0.15,
-        base: Math.random() * 0.75 + 0.08,
-        phase: Math.random() * Math.PI * 2,
-        speed: Math.random() * 0.4 + 0.07,
-      });
-    }
-  }
-
-  let t = 0;
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0,   '#02030b');
-    g.addColorStop(0.5, '#03040e');
-    g.addColorStop(1,   '#060818');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    t += 0.01;
-    for (const s of stars) {
-      const op = s.base * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${op.toFixed(3)})`;
-      ctx.fill();
-    }
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener('resize', () => { resize(); makeStars(); });
-  resize(); makeStars(); draw();
-
-  function shoot() {
-    const el = document.createElement('div');
-    el.className = 'shoot';
-    const sx = Math.random() * W * 1.2;
-    const sy = Math.random() * H * 0.5;
-    const a  = (Math.random() * 30 + 10) * (Math.PI / 180);
-    const d  = 300 + Math.random() * 500;
-    el.style.left = sx + 'px';
-    el.style.top  = sy + 'px';
-    el.style.setProperty('--sx', Math.round(Math.cos(a) * d));
-    el.style.setProperty('--sy', Math.round(Math.sin(a) * d));
-    const dur = 0.5 + Math.random() * 0.9;
-    el.style.setProperty('--sdur', dur + 's');
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), dur * 1000 + 200);
-  }
-  function scheduleShoot() { shoot(); setTimeout(scheduleShoot, 3500 + Math.random() * 10000); }
-  setTimeout(scheduleShoot, 1500);
-})();
-
-// ── Fallback corpus ──────────────────────────────────────────────────────────
-const CORPUS = [
-  { tag: "AI wellness tip",    text: "Remember to hydrate your inner child by drinking a full glass of water while visualizing your best self emerging from a chrysalis of radical self-acceptance." },
-  { tag: "AI recipe",          text: "Cozy Midnight Oat Bowl: combine 1 cup rolled oats with oat milk, a drizzle of local honey, a pinch of cardamom, and the quiet understanding that tomorrow is a new beginning." },
-  { tag: "AI poem",            text: "The moon is a notification\nyou cannot dismiss.\nEvery star a pixel\nin the universe's dream feed.\nSleep now.\nThe algorithm loves you." },
-  { tag: "AI productivity tip",text: "Before bed, write down three things you are grateful for, two things you will accomplish tomorrow, and one password you should really update." },
-  { tag: "AI mindfulness",     text: "Close your eyes. Imagine a warm linen duvet that was manufactured sustainably in Portugal. Notice how it smells of lavender and venture capital." },
-  { tag: "AI haiku",           text: "soft gradient sky\nthe chatbot knows your sorrows\nrefresh and try again" },
-  { tag: "AI sleep fact",      text: "Scientists have discovered that humans who sleep between 7–9 hours per night are 34% more likely to describe their morning as 'crisp.'" },
-  { tag: "AI affirmation",     text: "You are doing an amazing job simply by existing in this particular configuration of matter. Your unique perspective adds genuine value to the conversation." },
-  { tag: "AI travel writing",  text: "Nestled between two fog-kissed hills, the village of Somnhaven offers artisan bread, unhurried locals, and the particular silence of a place that has never heard of content strategy." },
-  { tag: "AI dream journal",   text: "I dreamed I was a language model dreaming of a language model. Each layer of the dream was slightly more coherent but far less interesting than the one before." },
-  { tag: "AI meditation",      text: "Breathe in for four counts. Hold for seven. Exhale for eight. You have successfully completed the 4-7-8 breathing technique. Please rate your experience: ⭐⭐⭐⭐⭐" },
-  { tag: "AI nature writing",  text: "The river does not hustle. The river does not grind. The river merely flows, unbothered, toward the sea, optimizing for nothing, converting no one." },
-  { tag: "AI bedtime story",   text: "Once upon a time there was a small bear who had everything he needed: a warm cave, a jar of honey, and a comfortable uncertainty about the nature of consciousness." },
-  { tag: "AI interior design", text: "For a restful bedroom, choose muted tones that evoke concepts rather than colors — 'early fog,' 'considered slate,' 'the idea of linen.'" },
-  { tag: "AI horoscope",       text: "Mercury is in retrograde, which means nothing cosmologically but may provide useful emotional cover for the emails you have not yet sent." },
-  { tag: "AI life coach",      text: "The version of you that wakes up tomorrow has the opportunity to be 1% better than the version of you that is reading this sentence. What an incredible gift." },
-  { tag: "AI poem",            text: "Nothing is curated tonight.\nThe stars are just there.\nThe dark is just dark.\nYou are permitted to stop optimizing\nfor the next few hours." },
-  { tag: "AI sleep science",   text: "Your body temperature naturally drops 1–2°F during sleep onset. Think of yourself as a particularly thoughtful piece of bread, cooling on a rack." },
-  { tag: "AI affirmation",     text: "You have arrived at the end of this day. It is okay to close the tabs. All of them. The tabs will still be there. You can reopen them. But you don't have to." },
-  { tag: "AI mindfulness",     text: "Imagine you are a cloud. You don't have to do anything. You don't have to be any particular shape. You can simply drift, casting soft shadows on nothing in particular." },
-  { tag: "AI haiku",           text: "the model hallucinates\na mountain that doesn't exist\nyou dream of it anyway" },
-  { tag: "AI self-help",       text: "You don't need to earn rest. Rest is not a reward for productivity. Rest is infrastructure. Without it, the rest of you runs on degraded performance." },
-];
-
-// ── Live AI generation ───────────────────────────────────────────────────────
-let apiKey  = localStorage.getItem('slop_key') || '';
-let aiQueue = [];
-let fetching = false;
-
-const apiInput = document.getElementById('api-input');
-if (apiKey) { apiInput.value = apiKey; apiInput.classList.add('live'); }
-
-function saveKey() {
-  apiKey = apiInput.value.trim();
-  if (apiKey) {
-    localStorage.setItem('slop_key', apiKey);
-    apiInput.classList.add('live');
-    refillQueue();
-  } else {
-    localStorage.removeItem('slop_key');
-    apiInput.classList.remove('live');
-  }
-}
-
-async function refillQueue() {
-  if (!apiKey || fetching || aiQueue.length > 5) return;
-  fetching = true;
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 900,
-        messages: [{
-          role: 'user',
-          content: `Generate 6 short pieces of AI slop for a dreamy ambient sleep website with a deep-space aesthetic. Each piece should feel like something an AI would sincerely produce when asked to help someone relax, sleep, or find wellness — earnest, slightly over-optimised, occasionally accidentally beautiful.
-
-Vary the styles: AI wellness tip, AI poem, AI haiku, AI affirmation, AI mindfulness, AI sleep fact, AI bedtime story excerpt, AI nature writing, AI horoscope, AI life coach, AI dream analysis, AI journaling prompt.
-
-Respond with ONLY a valid JSON array of 6 objects, each with "tag" (string) and "text" (string) fields. Use \\n for line breaks in verse. No markdown, no explanation.`,
-        }],
-      }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const raw  = data.content[0].text.trim();
-      const items = JSON.parse(raw.slice(raw.indexOf('['), raw.lastIndexOf(']') + 1));
-      aiQueue.push(...items);
-    }
-  } catch (_) {}
-  fetching = false;
-}
-
-// ── Item queue ───────────────────────────────────────────────────────────────
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -347,47 +101,41 @@ function shuffle(arr) {
   }
   return a;
 }
-let pool = shuffle(CORPUS), poolIdx = 0;
 
 function nextItem() {
-  if (aiQueue.length > 0) {
-    if (aiQueue.length < 3) refillQueue();
-    return aiQueue.shift();
+  if (idx >= items.length) { items = shuffle(items); idx = 0; }
+  return items[idx++];
+}
+
+function show(item) {
+  stage.style.opacity = '0';
+  setTimeout(() => {
+    tagEl.textContent   = item.tag;
+    textEl.innerHTML    = item.text.replace(/\n/g, '<br>');
+    stage.style.opacity = '1';
+  }, 1400);
+}
+
+function advance() {
+  show(nextItem());
+  if (!paused) timer = setTimeout(advance, 12000);
+}
+
+function togglePause() {
+  paused = !paused;
+  if (paused) {
+    clearTimeout(timer);
+    pauseBtn.innerHTML = '&#9654;';
+  } else {
+    pauseBtn.innerHTML = '&#9646;&#9646;';
+    timer = setTimeout(advance, 12000);
   }
-  if (poolIdx >= pool.length) { pool = shuffle(CORPUS); poolIdx = 0; }
-  return pool[poolIdx++];
 }
 
-// ── Spawn ────────────────────────────────────────────────────────────────────
-function spawnSlop() {
-  const item  = nextItem();
-  const el    = document.createElement('div');
-  el.className = 'slop';
+fetch('data/slop.json')
+  .then(r => r.json())
+  .then(data => { items = shuffle(data); advance(); });
 
-  const blobW  = Math.min(420, window.innerWidth * 0.88);
-  const margin = 20;
-  const x = margin + Math.random() * Math.max(0, window.innerWidth  - blobW - margin * 2);
-  const y = margin + Math.random() * Math.max(0, window.innerHeight - 160  - margin * 2);
-  const dur = 18 + Math.random() * 16;
-
-  el.style.left = x + 'px';
-  el.style.top  = y + 'px';
-  el.style.setProperty('--fdur', dur + 's');
-  el.style.transform = `rotate(${(Math.random() - 0.5) * 4}deg)`;
-  el.innerHTML = `<span class="label">${item.tag}</span>${item.text.replace(/\n/g, '<br>')}`;
-
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), (dur + 1) * 1000);
-}
-
-const BURST = 7;
-for (let i = 0; i < BURST; i++) setTimeout(spawnSlop, i * 1100);
-(function scheduleNext() {
-  spawnSlop();
-  setTimeout(scheduleNext, 2200 + Math.random() * 2800);
-}());
-
-if (apiKey) refillQueue();
 
 // ── White noise ──────────────────────────────────────────────────────────────
 let audioCtx = null, noiseNode = null, gainNode = null, noiseOn = false;
@@ -421,14 +169,14 @@ function toggleNoise() {
     noiseNode = source;
     gainNode.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 1.5);
     noiseOn = true;
-    btn.textContent = '◼ white noise';
     btn.classList.add('on');
+    btn.innerHTML = '&#9646;&#9646; noise';
   } else {
     gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
     setTimeout(() => { if (noiseNode) { noiseNode.stop(); noiseNode = null; } }, 1400);
     noiseOn = false;
-    btn.textContent = '▶ white noise';
     btn.classList.remove('on');
+    btn.innerHTML = '&#9654; noise';
   }
 }
 </script>

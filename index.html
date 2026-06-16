@@ -38,9 +38,19 @@
     #text {
       font-size: clamp(1.25rem, 3vw, 2.1rem);
       line-height: 1.75;
-      color: #fff;
       max-width: min(700px, 88vw);
       font-weight: 300;
+    }
+
+    /* ── Noise text ── */
+    :root { --noise-url: none; }
+    .noise-text {
+      background-image: var(--noise-url);
+      background-size: 100vw 100vh;
+      background-attachment: fixed;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     /* ── Bottom controls ── */
@@ -86,7 +96,6 @@
       font-size: clamp(2.2rem, 8vw, 6rem);
       font-weight: 800;
       letter-spacing: 0.06em;
-      color: #fff;
       text-align: center;
       line-height: 1.05;
     }
@@ -102,13 +111,13 @@
 <body>
 
 <div id="splash">
-  <h1>SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
+  <h1 class="noise-text">SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
   <p>drift into algorithmic slumber</p>
 </div>
 
 <div id="stage">
   <div id="tag"></div>
-  <div id="text"></div>
+  <div id="text" class="noise-text"></div>
 </div>
 
 <div id="controls">
@@ -117,6 +126,30 @@
 </div>
 
 <script>
+// ── White noise texture ───────────────────────────────────────────────────────
+(function () {
+  const NW = 640, NH = 360;
+  const nc   = document.createElement('canvas');
+  nc.width   = NW; nc.height = NH;
+  const nctx = nc.getContext('2d');
+  const root = document.documentElement;
+
+  function tick() {
+    const id = nctx.createImageData(NW, NH);
+    const d  = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v  = Math.random() * 255 | 0;
+      d[i] = d[i+1] = d[i+2] = v;
+      d[i+3] = 255;
+    }
+    nctx.putImageData(id, 0, 0);
+    root.style.setProperty('--noise-url', `url('${nc.toDataURL()}')`);
+  }
+
+  tick();
+  setInterval(tick, 80); // ~12 fps flicker
+})();
+
 // ── API sources ───────────────────────────────────────────────────────────────
 const SOURCES = [
   {

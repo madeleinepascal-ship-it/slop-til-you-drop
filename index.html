@@ -38,9 +38,19 @@
     #text {
       font-size: clamp(1.25rem, 3vw, 2.1rem);
       line-height: 1.75;
-      color: #fff;
       max-width: min(700px, 88vw);
       font-weight: 300;
+    }
+
+    /* ── Noise text ── */
+    :root { --noise-url: none; }
+    .noise-text {
+      background-image: var(--noise-url);
+      background-size: 100vw 100vh;
+      background-attachment: fixed;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     /* ── Bottom controls ── */
@@ -86,7 +96,6 @@
       font-size: clamp(2.2rem, 8vw, 6rem);
       font-weight: 800;
       letter-spacing: 0.06em;
-      color: #fff;
       text-align: center;
       line-height: 1.05;
     }
@@ -102,13 +111,13 @@
 <body>
 
 <div id="splash">
-  <h1>SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
+  <h1 class="noise-text">SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
   <p>drift into algorithmic slumber</p>
 </div>
 
 <div id="stage">
   <div id="tag"></div>
-  <div id="text"></div>
+  <div id="text" class="noise-text"></div>
 </div>
 
 <div id="controls">
@@ -117,16 +126,111 @@
 </div>
 
 <script>
-// ── Slop display ─────────────────────────────────────────────────────────────
-const stage   = document.getElementById('stage');
-const tagEl   = document.getElementById('tag');
-const textEl  = document.getElementById('text');
-const pauseBtn = document.getElementById('pause-btn');
+// ── White noise texture ───────────────────────────────────────────────────────
+(function () {
+  const NW = 640, NH = 360;
+  const nc   = document.createElement('canvas');
+  nc.width   = NW; nc.height = NH;
+  const nctx = nc.getContext('2d');
+  const root = document.documentElement;
 
-let items  = [];
-let idx    = 0;
-let timer  = null;
-let paused = false;
+  function tick() {
+    const id = nctx.createImageData(NW, NH);
+    const d  = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v  = Math.random() * 255 | 0;
+      d[i] = d[i+1] = d[i+2] = v;
+      d[i+3] = 255;
+    }
+    nctx.putImageData(id, 0, 0);
+    root.style.setProperty('--noise-url', `url('${nc.toDataURL()}')`);
+  }
+
+  tick();
+  setInterval(tick, 80); // ~12 fps flicker
+})();
+
+// ── API sources ───────────────────────────────────────────────────────────────
+const SOURCES = [
+  {
+    fetch: async () => {
+      const d = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary').then(r => r.json());
+      const text = (d.extract || '').split('\n')[0].trim().slice(0, 450);
+      return text.length > 40 ? [{ tag: 'WIKIPEDIA', text }] : [];
+    }
+  },
+  {
+    fetch: async () => {
+      const d = await fetch('https://opentdb.com/api.php?amount=6&encode=url3986').then(r => r.json());
+      if (d.response_code !== 0) return [];
+      return d.results.map(q => ({
+        tag: decodeURIComponent(q.category),
+        text: decodeURIComponent(q.question)
+      }));
+    }
+  },
+  {
+    fetch: async () => {
+      const d = await fetch('https://api.adviceslip.com/advice', { cache: 'no-cache' }).then(r => r.json());
+      return [{ tag: 'ADVICE', text: d.slip.advice }];
+    }
+  },
+  {
+    fetch: async () => {
+      const d = await fetch('https://icanhazdadjoke.com/', { headers: { Accept: 'application/json' } }).then(r => r.json());
+      return [{ tag: 'DAD JOKE', text: d.joke }];
+    }
+  },
+  {
+    fetch: async () => {
+      const d = await fetch('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en').then(r => r.json());
+      return [{ tag: 'USELESS FACT', text: d.text }];
+    }
+  },
+  {
+    fetch: async () => {
+      const d = await fetch('https://www.reddit.com/r/Showerthoughts/hot.json?limit=25&raw_json=1').then(r => r.json());
+      return d.data.children
+        .filter(c => !c.data.stickied && c.data.title.length > 20)
+        .slice(0, 10)
+        .map(c => ({ tag: 'SHOWER THOUGHT', text: c.data.title }));
+    }
+  },
+  {
+    fetch: async () => {
+      const d = await fetch('https://www.reddit.com/r/todayilearned/hot.json?limit=25&raw_json=1').then(r => r.json());
+      return d.data.children
+        .filter(c => !c.data.stickied)
+        .slice(0, 8)
+        .map(c => ({ tag: 'TODAY I LEARNED', text: c.data.title.replace(/^TIL\s+that?\s*/i, '') }));
+    }
+  },
+  {
+    fetch: async () => {
+      const d = await fetch('https://www.reddit.com/r/AskReddit/hot.json?limit=25&raw_json=1').then(r => r.json());
+      return d.data.children
+        .filter(c => !c.data.stickied && c.data.title.length > 20)
+        .slice(0, 8)
+        .map(c => ({ tag: 'ASK REDDIT', text: c.data.title }));
+    }
+  },
+  {
+    fetch: async () => {
+      const ids = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json').then(r => r.json());
+      const picks = [...ids].sort(() => Math.random() - 0.5).slice(0, 6);
+      const items = await Promise.all(
+        picks.map(id => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(r => r.json()).catch(() => null))
+      );
+      return items.filter(i => i?.title).map(i => ({ tag: 'HACKER NEWS', text: i.title }));
+    }
+  }
+];
+
+// ── Queue ─────────────────────────────────────────────────────────────────────
+let apiQueue  = [];
+let fallback  = [];
+let fallbackIdx = 0;
+let fetching  = false;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -137,16 +241,38 @@ function shuffle(arr) {
   return a;
 }
 
-function nextItem() {
-  if (idx >= items.length) { items = shuffle(items); idx = 0; }
-  return items[idx++];
+async function refill() {
+  if (fetching || apiQueue.length > 6) return;
+  fetching = true;
+  const src = SOURCES[Math.floor(Math.random() * SOURCES.length)];
+  try {
+    const items = await src.fetch();
+    apiQueue.push(...shuffle(items.filter(i => i.text?.trim().length > 10)));
+  } catch (_) {}
+  fetching = false;
 }
+
+function nextItem() {
+  if (apiQueue.length < 4) refill();
+  if (apiQueue.length > 0) return apiQueue.shift();
+  if (fallbackIdx >= fallback.length) { fallback = shuffle(fallback); fallbackIdx = 0; }
+  return fallback[fallbackIdx++];
+}
+
+// ── Display ───────────────────────────────────────────────────────────────────
+const stage    = document.getElementById('stage');
+const tagEl    = document.getElementById('tag');
+const textEl   = document.getElementById('text');
+const pauseBtn = document.getElementById('pause-btn');
+
+let timer  = null;
+let paused = false;
 
 function show(item) {
   stage.style.opacity = '0';
   setTimeout(() => {
-    tagEl.textContent   = item.tag;
-    textEl.innerHTML    = item.text.replace(/\n/g, '<br>');
+    tagEl.textContent  = item.tag;
+    textEl.innerHTML   = item.text.replace(/\n/g, '<br>');
     stage.style.opacity = '1';
   }, 1400);
 }
@@ -167,16 +293,25 @@ function togglePause() {
   }
 }
 
-// ── Splash ───────────────────────────────────────────────────────────────────
+// ── Splash ────────────────────────────────────────────────────────────────────
 const splash = document.getElementById('splash');
 setTimeout(() => {
   splash.style.opacity = '0';
   setTimeout(() => splash.remove(), 1600);
 }, 2800);
 
+// Prime API queue in parallel, then start display
+for (let i = 0; i < 3; i++) {
+  const src = SOURCES[Math.floor(Math.random() * SOURCES.length)];
+  src.fetch()
+    .then(items => apiQueue.push(...shuffle(items.filter(i => i.text?.trim().length > 10))))
+    .catch(() => {});
+}
+
+// Load fallback corpus, kick off display
 fetch('data/slop.json')
   .then(r => r.json())
-  .then(data => { items = shuffle(data); advance(); });
+  .then(data => { fallback = shuffle(data); advance(); });
 
 
 // ── White noise ──────────────────────────────────────────────────────────────

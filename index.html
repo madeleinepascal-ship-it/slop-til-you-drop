@@ -9,7 +9,7 @@
 
     html, body {
       width: 100%; height: 100%;
-      background: #0a0f2c;
+      background: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       overflow: hidden;
       user-select: none;
@@ -31,7 +31,7 @@
       position: fixed; inset: 0; z-index: 20;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      background: #0a0f2c;
+      background: #fff;
       pointer-events: none;
       opacity: 0;
       transition: opacity 1.5s ease;
@@ -46,7 +46,7 @@
     #subhead {
       margin-top: 1.8rem;
       font-size: clamp(0.85rem, 1.8vw, 1.2rem);
-      color: rgba(255, 255, 255, 0.38);
+      color: rgba(0, 0, 0, 0.38);
       letter-spacing: 0.03em;
       opacity: 0;
       transition: opacity 0.5s ease;
@@ -61,7 +61,7 @@
     }
     .slop-item {
       position: absolute;
-      color: rgba(255, 255, 255, 0.72);
+      color: rgba(0, 0, 0, 0.65);
       font-size: clamp(0.68rem, 1.2vw, 0.84rem);
       line-height: 1.78;
       font-weight: 300;
@@ -73,7 +73,7 @@
       font-size: 0.5rem;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.22);
+      color: rgba(0, 0, 0, 0.22);
       margin-bottom: 0.35rem;
     }
     @keyframes riseUp {
@@ -94,14 +94,14 @@
     }
     #noise-label {
       font-size: 0.68rem;
-      color: rgba(255, 255, 255, 0.28);
+      color: rgba(0, 0, 0, 0.28);
       letter-spacing: 0.12em;
       text-transform: uppercase;
     }
     #noise-btn {
-      background: rgba(255,255,255,0.06);
-      border: 1.5px solid rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.6);
+      background: rgba(0,0,0,0.04);
+      border: 1.5px solid rgba(0,0,0,0.18);
+      color: rgba(0,0,0,0.55);
       padding: 0.8rem 2.4rem;
       border-radius: 99px;
       font-size: 1.05rem;
@@ -111,11 +111,11 @@
       transition: background 0.2s, color 0.2s, border-color 0.2s;
       pointer-events: all;
     }
-    #noise-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
-    #noise-btn.on { color: #fff; border-color: rgba(255,255,255,0.45); }
+    #noise-btn:hover { background: rgba(0,0,0,0.08); color: #000; }
+    #noise-btn.on { color: #000; border-color: rgba(0,0,0,0.4); background: rgba(0,0,0,0.06); }
     #pause-btn {
       background: none; border: none;
-      color: rgba(255,255,255,0.18);
+      color: rgba(0,0,0,0.18);
       font-size: 0.68rem;
       letter-spacing: 0.12em;
       cursor: pointer;
@@ -124,7 +124,7 @@
       pointer-events: all;
       padding: 0.2rem 0.4rem;
     }
-    #pause-btn:hover { color: rgba(255,255,255,0.45); }
+    #pause-btn:hover { color: rgba(0,0,0,0.45); }
   </style>
 </head>
 <body>
@@ -190,7 +190,6 @@ const SUBHEADS = [
 const splash  = document.getElementById('splash');
 const subEl   = document.getElementById('subhead');
 
-// Fade splash in
 requestAnimationFrame(() => requestAnimationFrame(() => { splash.style.opacity = '1'; }));
 
 function showSubhead(text) {
@@ -202,7 +201,6 @@ setTimeout(() => showSubhead(SUBHEADS[0]), 1000);
 setTimeout(() => showSubhead(SUBHEADS[1]), 2800);
 setTimeout(() => showSubhead(SUBHEADS[2]), 4600);
 
-// Fade splash out after all three shown
 setTimeout(() => {
   splash.style.opacity = '0';
   setTimeout(() => splash.remove(), 1500);
@@ -317,7 +315,6 @@ function nextItem() {
   return fallback[fallbackIdx++] || { tag: '···', text: '···' };
 }
 
-// Pre-fetch aggressively while splash shows
 for (let i = 0; i < 5; i++) {
   const src = SOURCES[Math.floor(Math.random() * SOURCES.length)];
   src.fetch()
@@ -359,7 +356,6 @@ function togglePause() {
   pauseBtn.innerHTML = paused ? '&#9654;&nbsp;resume' : '&#9646;&#9646;&nbsp;pause';
 }
 
-// Start slop just as splash begins fading
 setTimeout(() => {
   const INIT = 24;
   for (let i = 0; i < INIT; i++) {

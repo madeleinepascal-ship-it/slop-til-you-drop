@@ -9,37 +9,10 @@
 
     html, body {
       width: 100%; height: 100%;
-      background: #0a0f2c;
-      color: #fff;
+      background: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       overflow: hidden;
       user-select: none;
-    }
-
-    /* ── Centered text stage ── */
-    #stage {
-      position: fixed; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 3rem 2rem 5rem;
-      text-align: center;
-      opacity: 1;
-      transition: opacity 1.4s ease;
-    }
-
-    #tag {
-      font-size: 0.65rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.22);
-      margin-bottom: 1.4rem;
-    }
-
-    #text {
-      font-size: clamp(1.25rem, 3vw, 2.1rem);
-      line-height: 1.75;
-      max-width: min(700px, 88vw);
-      font-weight: 300;
     }
 
     /* ── Noise text ── */
@@ -53,109 +26,191 @@
       -webkit-text-fill-color: transparent;
     }
 
-    /* ── Bottom controls ── */
-    #controls {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 1.4rem;
-      z-index: 10;
-    }
-
-    #controls button {
-      background: none;
-      border: none;
-      color: rgba(255, 255, 255, 0.25);
-      font-size: 0.78rem;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-      padding: 0.35rem 0.5rem;
-      transition: color 0.25s;
-      font-family: inherit;
-    }
-    #controls button:hover { color: rgba(255, 255, 255, 0.55); }
-    #noise-btn.on { color: rgba(180, 210, 255, 0.55); }
-
     /* ── Splash ── */
     #splash {
       position: fixed; inset: 0; z-index: 20;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      background: #0a0f2c;
+      background: #fff;
       pointer-events: none;
-      animation: splashIn 1.2s ease forwards;
+      animation: fadeIn 1s ease forwards;
       transition: opacity 1.6s ease;
     }
-    @keyframes splashIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    #splash h1 {
-      font-size: clamp(2.2rem, 8vw, 6rem);
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    #title {
       font-weight: 800;
-      letter-spacing: 0.06em;
+      letter-spacing: -0.02em;
       text-align: center;
-      line-height: 1.05;
+      line-height: 0.93;
+      /* font-size set by JS */
     }
-    #splash p {
-      margin-top: 1.1rem;
-      font-size: clamp(0.65rem, 1.4vw, 0.9rem);
-      color: rgba(255, 255, 255, 0.32);
-      letter-spacing: 0.28em;
+    #subhead {
+      margin-top: 1.6rem;
+      font-size: clamp(0.8rem, 1.6vw, 1.15rem);
+      color: rgba(0, 0, 0, 0.38);
+      letter-spacing: 0.03em;
+      transition: opacity 0.5s ease;
+    }
+
+    /* ── Scrolling feed ── */
+    #feed {
+      position: fixed; inset: 0; z-index: 5;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .slop-item {
+      position: absolute;
+      color: #1a1a1a;
+      font-size: clamp(0.68rem, 1.2vw, 0.84rem);
+      line-height: 1.78;
+      font-weight: 400;
+      animation: riseUp var(--dur, 26s) linear forwards;
+      will-change: transform, opacity;
+    }
+    .item-tag {
+      display: block;
+      font-size: 0.5rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.28);
+      margin-bottom: 0.4rem;
+    }
+    @keyframes riseUp {
+      0%   { opacity: 0; transform: translateY(0); }
+      6%   { opacity: 1; }
+      88%  { opacity: 1; }
+      100% { opacity: 0; transform: translateY(calc(-100vh - 500px)); }
+    }
+
+    /* ── Controls ── */
+    #controls {
+      position: fixed; bottom: 2.5rem; left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0.6rem;
+      pointer-events: none;
+    }
+    #noise-label {
+      font-size: 0.7rem;
+      color: rgba(0, 0, 0, 0.3);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
+    #noise-btn {
+      background: rgba(0,0,0,0.04);
+      border: 1.5px solid rgba(0,0,0,0.16);
+      color: rgba(0,0,0,0.5);
+      padding: 0.8rem 2.4rem;
+      border-radius: 99px;
+      font-size: 1.05rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      pointer-events: all;
+    }
+    #noise-btn:hover { background: rgba(0,0,0,0.08); color: rgba(0,0,0,0.8); }
+    #noise-btn.on { color: #000; border-color: rgba(0,0,0,0.4); background: rgba(0,0,0,0.07); }
+    #pause-btn {
+      background: none; border: none;
+      color: rgba(0,0,0,0.2);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      font-family: inherit;
+      transition: color 0.2s;
+      pointer-events: all;
+      padding: 0.2rem 0.4rem;
+    }
+    #pause-btn:hover { color: rgba(0,0,0,0.45); }
   </style>
 </head>
 <body>
 
 <div id="splash">
-  <h1 class="noise-text">SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
-  <p>drift into algorithmic slumber</p>
+  <h1 id="title" class="noise-text">SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
+  <p id="subhead">Use all the boring for something useful</p>
 </div>
 
-<div id="stage">
-  <div id="tag"></div>
-  <div id="text" class="noise-text"></div>
-</div>
+<div id="feed"></div>
 
 <div id="controls">
-  <button id="pause-btn" onclick="togglePause()">&#9646;&#9646;</button>
-  <button id="noise-btn" onclick="toggleNoise()">&#9654; noise</button>
+  <div id="noise-label">put on white noise for the full experience</div>
+  <button id="noise-btn" onclick="toggleNoise()">&#9654;&nbsp;&nbsp;white noise</button>
+  <button id="pause-btn" onclick="togglePause()">&#9646;&#9646;&nbsp;pause</button>
 </div>
 
 <script>
-// ── White noise texture ───────────────────────────────────────────────────────
+// ── Noise texture (12fps flicker) ─────────────────────────────────────────────
 (function () {
   const NW = 640, NH = 360;
-  const nc   = document.createElement('canvas');
-  nc.width   = NW; nc.height = NH;
+  const nc = document.createElement('canvas');
+  nc.width = NW; nc.height = NH;
   const nctx = nc.getContext('2d');
-  const root = document.documentElement;
 
   function tick() {
     const id = nctx.createImageData(NW, NH);
     const d  = id.data;
     for (let i = 0; i < d.length; i += 4) {
-      const v  = Math.random() * 255 | 0;
+      const v = Math.random() * 255 | 0;
       d[i] = d[i+1] = d[i+2] = v;
       d[i+3] = 255;
     }
     nctx.putImageData(id, 0, 0);
-    root.style.setProperty('--noise-url', `url('${nc.toDataURL()}')`);
+    document.documentElement.style.setProperty('--noise-url', `url('${nc.toDataURL()}')`);
   }
-
   tick();
-  setInterval(tick, 80); // ~12 fps flicker
+  setInterval(tick, 80);
 })();
+
+// ── Fit title to screen width ─────────────────────────────────────────────────
+function fitTitle() {
+  const lines = ["SLOP 'TIL", "YOU DROP"];
+  const tc = document.createElement('canvas').getContext('2d');
+  const target = window.innerWidth * 0.96;
+  let size = 10;
+  while (size < 800) {
+    tc.font = `800 ${size + 4}px system-ui, -apple-system, sans-serif`;
+    if (Math.max(...lines.map(l => tc.measureText(l).width)) > target) break;
+    size += 4;
+  }
+  document.getElementById('title').style.fontSize = size + 'px';
+}
+fitTitle();
+window.addEventListener('resize', fitTitle);
+
+// ── Subhead cycle ─────────────────────────────────────────────────────────────
+const SUBHEADS = [
+  "Use all the boring for something useful",
+  "Drift into algorithmic slumber",
+  "After all, you can't spell napping without AI"
+];
+let subIdx = 0;
+const subEl = document.getElementById('subhead');
+setInterval(() => {
+  subEl.style.opacity = '0';
+  setTimeout(() => {
+    subIdx = (subIdx + 1) % SUBHEADS.length;
+    subEl.textContent = SUBHEADS[subIdx];
+    subEl.style.opacity = '1';
+  }, 500);
+}, 2200);
+
+// ── Splash fade ───────────────────────────────────────────────────────────────
+const splash = document.getElementById('splash');
+setTimeout(() => {
+  splash.style.opacity = '0';
+  setTimeout(() => splash.remove(), 1600);
+}, 3500);
 
 // ── API sources ───────────────────────────────────────────────────────────────
 const SOURCES = [
   {
     fetch: async () => {
       const d = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary').then(r => r.json());
-      const text = (d.extract || '').split('\n')[0].trim().slice(0, 450);
+      const text = (d.extract || '').split('\n')[0].trim().slice(0, 420);
       return text.length > 40 ? [{ tag: 'WIKIPEDIA', text }] : [];
     }
   },
@@ -242,7 +297,7 @@ function shuffle(arr) {
 }
 
 async function refill() {
-  if (fetching || apiQueue.length > 6) return;
+  if (fetching || apiQueue.length > 8) return;
   fetching = true;
   const src = SOURCES[Math.floor(Math.random() * SOURCES.length)];
   try {
@@ -253,68 +308,72 @@ async function refill() {
 }
 
 function nextItem() {
-  if (apiQueue.length < 4) refill();
+  if (apiQueue.length < 5) refill();
   if (apiQueue.length > 0) return apiQueue.shift();
   if (fallbackIdx >= fallback.length) { fallback = shuffle(fallback); fallbackIdx = 0; }
-  return fallback[fallbackIdx++];
+  return fallback[fallbackIdx++] || { tag: '...', text: '...' };
 }
 
-// ── Display ───────────────────────────────────────────────────────────────────
-const stage    = document.getElementById('stage');
-const tagEl    = document.getElementById('tag');
-const textEl   = document.getElementById('text');
-const pauseBtn = document.getElementById('pause-btn');
-
-let timer  = null;
-let paused = false;
-
-function show(item) {
-  stage.style.opacity = '0';
-  setTimeout(() => {
-    tagEl.textContent  = item.tag;
-    textEl.innerHTML   = item.text.replace(/\n/g, '<br>');
-    stage.style.opacity = '1';
-  }, 1400);
-}
-
-function advance() {
-  show(nextItem());
-  if (!paused) timer = setTimeout(advance, 12000);
-}
-
-function togglePause() {
-  paused = !paused;
-  if (paused) {
-    clearTimeout(timer);
-    pauseBtn.innerHTML = '&#9654;';
-  } else {
-    pauseBtn.innerHTML = '&#9646;&#9646;';
-    timer = setTimeout(advance, 12000);
-  }
-}
-
-// ── Splash ────────────────────────────────────────────────────────────────────
-const splash = document.getElementById('splash');
-setTimeout(() => {
-  splash.style.opacity = '0';
-  setTimeout(() => splash.remove(), 1600);
-}, 2800);
-
-// Prime API queue in parallel, then start display
-for (let i = 0; i < 3; i++) {
+// Kick off 4 parallel fetches right away
+for (let i = 0; i < 4; i++) {
   const src = SOURCES[Math.floor(Math.random() * SOURCES.length)];
   src.fetch()
     .then(items => apiQueue.push(...shuffle(items.filter(i => i.text?.trim().length > 10))))
     .catch(() => {});
 }
 
-// Load fallback corpus, kick off display
+// ── Spawning ──────────────────────────────────────────────────────────────────
+const feed   = document.getElementById('feed');
+let paused   = false;
+const pauseBtn = document.getElementById('pause-btn');
+
+function spawnItem(startY) {
+  const item  = nextItem();
+  const el    = document.createElement('div');
+  el.className = 'slop-item';
+
+  const maxW = 240 + Math.random() * 140;
+  const x    = 24 + Math.random() * Math.max(0, window.innerWidth - maxW - 48);
+  const y    = startY !== undefined ? startY : window.innerHeight + 20;
+  const dur  = 20 + Math.random() * 14;
+
+  el.style.cssText = `left:${x}px;top:${y}px;max-width:${maxW}px`;
+  el.style.setProperty('--dur', dur + 's');
+  if (paused) el.style.animationPlayState = 'paused';
+
+  el.innerHTML = `<span class="item-tag">${item.tag}</span>${item.text.replace(/\n/g, '<br>')}`;
+  feed.appendChild(el);
+  setTimeout(() => el.remove(), (dur + 0.5) * 1000);
+}
+
+function togglePause() {
+  paused = !paused;
+  feed.querySelectorAll('.slop-item').forEach(el => {
+    el.style.animationPlayState = paused ? 'paused' : 'running';
+  });
+  pauseBtn.innerHTML = paused
+    ? '&#9654;&nbsp;resume'
+    : '&#9646;&#9646;&nbsp;pause';
+}
+
+// Initial burst: scatter items across the full viewport height
+const INIT = 18;
+for (let i = 0; i < INIT; i++) {
+  setTimeout(() => spawnItem(Math.random() * (window.innerHeight * 1.1)), i * 280);
+}
+
+// Ongoing stream from the bottom
+(function scheduleSpawn() {
+  if (!paused) spawnItem();
+  setTimeout(scheduleSpawn, 1400 + Math.random() * 1000);
+}());
+
+// Load fallback corpus
 fetch('data/slop.json')
   .then(r => r.json())
-  .then(data => { fallback = shuffle(data); advance(); });
+  .then(data => { fallback = shuffle(data); });
 
-
-// ── White noise ──────────────────────────────────────────────────────────────
+// ── White noise audio ─────────────────────────────────────────────────────────
 let audioCtx = null, noiseNode = null, gainNode = null, noiseOn = false;
 
 function buildNoise(ctx) {
@@ -347,13 +406,13 @@ function toggleNoise() {
     gainNode.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 1.5);
     noiseOn = true;
     btn.classList.add('on');
-    btn.innerHTML = '&#9646;&#9646; noise';
+    btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;white noise';
   } else {
     gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
     setTimeout(() => { if (noiseNode) { noiseNode.stop(); noiseNode = null; } }, 1400);
     noiseOn = false;
     btn.classList.remove('on');
-    btn.innerHTML = '&#9654; noise';
+    btn.innerHTML = '&#9654;&nbsp;&nbsp;white noise';
   }
 }
 </script>

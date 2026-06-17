@@ -61,26 +61,26 @@
     }
     .slop-item {
       position: absolute;
-      color: rgba(0, 0, 0, 0.65);
-      font-size: clamp(0.68rem, 1.2vw, 0.84rem);
-      line-height: 1.78;
-      font-weight: 300;
+      font-weight: 800;
+      line-height: 1.04;
+      letter-spacing: -0.01em;
       animation: riseUp var(--dur, 16s) linear forwards;
       will-change: transform, opacity;
     }
     .item-tag {
       display: block;
-      font-size: 0.5rem;
+      font-size: 0.62rem;
+      font-weight: 400;
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: rgba(0, 0, 0, 0.22);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.5rem;
     }
     @keyframes riseUp {
       0%   { opacity: 0; transform: translateY(0); }
       6%   { opacity: 1; }
       88%  { opacity: 1; }
-      100% { opacity: 0; transform: translateY(calc(-100vh - 500px)); }
+      100% { opacity: 0; transform: translateY(calc(-100vh - 900px)); }
     }
 
     /* ── Controls ── */
@@ -335,14 +335,16 @@ const pauseBtn = document.getElementById('pause-btn');
 function spawnItem(startY) {
   const item = nextItem();
   const el   = document.createElement('div');
-  el.className = 'slop-item';
+  el.className = 'slop-item noise-text';
 
-  const maxW = 220 + Math.random() * 160;
-  const x    = 20 + Math.random() * Math.max(0, window.innerWidth - maxW - 40);
-  const y    = startY !== undefined ? startY : window.innerHeight + 10;
-  const dur  = 10 + Math.random() * 8;
+  // Shorter text gets blown up closer to title scale; longer text shrinks to still fit/wrap.
+  const fsize = Math.min(6.2, Math.max(1.6, 7.2 - item.text.length / 30)) + Math.random() * 0.4;
+  const maxW  = window.innerWidth * (0.34 + Math.random() * 0.48);
+  const x     = 10 + Math.random() * Math.max(0, window.innerWidth - maxW - 20);
+  const y     = startY !== undefined ? startY : window.innerHeight + 10;
+  const dur   = 11 + Math.random() * 9;
 
-  el.style.cssText = `left:${x}px;top:${y}px;max-width:${maxW}px`;
+  el.style.cssText = `left:${x}px;top:${y}px;max-width:${maxW}px;font-size:${fsize}rem`;
   el.style.setProperty('--dur', dur + 's');
   if (paused) el.style.animationPlayState = 'paused';
 

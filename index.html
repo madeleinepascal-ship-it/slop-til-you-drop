@@ -49,7 +49,7 @@
       color: rgba(0, 0, 0, 0.38);
       letter-spacing: 0.03em;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.8s ease;
       min-height: 1.6em;
     }
 
@@ -162,7 +162,7 @@
     document.documentElement.style.setProperty('--noise-url', `url('${nc.toDataURL()}')`);
   }
   tick();
-  setInterval(tick, 80);
+  setInterval(tick, 220);
 })();
 
 // ── Fit title to screen width ─────────────────────────────────────────────────
@@ -195,18 +195,18 @@ requestAnimationFrame(() => requestAnimationFrame(() => { splash.style.opacity =
 
 function showSubhead(text) {
   subEl.style.opacity = '0';
-  setTimeout(() => { subEl.textContent = text; subEl.style.opacity = '1'; }, 500);
+  setTimeout(() => { subEl.textContent = text; subEl.style.opacity = '1'; }, 800);
 }
 
-setTimeout(() => showSubhead(SUBHEADS[0]), 1000);
-setTimeout(() => showSubhead(SUBHEADS[1]), 2800);
-setTimeout(() => showSubhead(SUBHEADS[2]), 4600);
+setTimeout(() => showSubhead(SUBHEADS[0]), 1200);
+setTimeout(() => showSubhead(SUBHEADS[1]), 4200);
+setTimeout(() => showSubhead(SUBHEADS[2]), 7200);
 
 // Fade splash out after all three shown
 setTimeout(() => {
   splash.style.opacity = '0';
   setTimeout(() => splash.remove(), 1500);
-}, 7000);
+}, 10200);
 
 // ── API sources ───────────────────────────────────────────────────────────────
 const SOURCES = [
@@ -375,7 +375,7 @@ setTimeout(() => {
     if (!paused) spawnItem();
     setTimeout(scheduleSpawn, 850 + Math.random() * 550);
   }());
-}, 6500);
+}, 9700);
 
 // ── White noise audio ─────────────────────────────────────────────────────────
 let audioCtx = null, noiseNode = null, gainNode = null, noiseOn = false;

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SLOP 'TIL YOU DROP</title>
+  <title>Slop til you drop</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -186,7 +186,7 @@
       <circle id="led" cx="610" cy="186" r="5"/>
       <path d="M60 420 A440 90 0 0 0 940 420" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="3"/>
     </svg>
-    <h1 id="title" class="noise-text"><span>SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</span></h1>
+    <h1 id="title" class="noise-text"><span>Slop&nbsp;til<br>you&nbsp;drop</span></h1>
   </div>
   <p id="subhead"></p>
 </div>
@@ -224,7 +224,7 @@
 
 // ── Fit title onto the front of the machine ──────────────────────────────────
 function fitTitle() {
-  const lines = ["SLOP 'TIL", "YOU DROP"];
+  const lines = ["Slop til", "you drop"];
   const box = document.getElementById('title');
   const tc = document.createElement('canvas').getContext('2d');
   const maxW = box.clientWidth, maxH = box.clientHeight;
@@ -233,7 +233,7 @@ function fitTitle() {
     const next = size + 2;
     tc.font = `800 ${next}px -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif`;
     const w = Math.max(...lines.map(l => tc.measureText(l).width)) * 1.04;
-    if (w > maxW || next * 0.93 * lines.length > maxH) break;
+    if (w > maxW || next * 1.02 * lines.length > maxH) break;
     size = next;
   }
   box.style.fontSize = size + 'px';

@@ -83,12 +83,12 @@
     /* ── Sound machine ── */
     #machine {
       position: relative;
-      width: min(90vw, calc(34vh * 1000 / 560), 950px);
+      width: min(90vw, calc(29vh * 1000 / 560), 900px);
       aspect-ratio: 1000 / 560;
     }
     #machine svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
     #title {
-      margin-bottom: 5vh;
+      margin-bottom: 4vh;
       font-weight: 800;
       letter-spacing: -0.02em;
       text-align: center;
@@ -110,13 +110,18 @@
     #knob-cap { transition: transform 0.15s; transform-origin: 500px 170px; }
     #machine-knob:active ~ svg #knob-cap { transform: scale(0.94); }
     #subhead {
-      margin-top: 1.8rem;
-      font-size: clamp(0.85rem, 1.8vw, 1.2rem);
-      color: rgba(0, 0, 0, 0.38);
-      letter-spacing: 0.03em;
+      margin-top: 3.5vh;
+      width: min(92vw, 1100px);
+      height: 3.3em;               /* room for up to three lines, so nothing jumps */
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      font-weight: 800;
+      font-size: clamp(1.15rem, min(3.4vw, 4.2vh), 2.9rem);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
       opacity: 0;
       transition: opacity 0.8s ease;
-      min-height: 1.6em;
     }
 
     /* ── Scrolling feed ── */
@@ -146,6 +151,27 @@
       -webkit-text-fill-color: rgba(0, 0, 0, 0.18);
       margin-bottom: 0.45rem;
     }
+    /* ── The wall: an endless, faint, slowly scrolling wall of slop ── */
+    #slop-wall {
+      position: absolute; inset: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 4s ease;
+      --fade: 86vh;   /* set by JS to just above the controls */
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 9%, #000 calc(var(--fade) - 22vh), transparent var(--fade));
+              mask-image: linear-gradient(to bottom, transparent 0, #000 9%, #000 calc(var(--fade) - 22vh), transparent var(--fade));
+    }
+    #slop-wall.on { opacity: 0.24; }
+    #slop-wall-inner {
+      padding: 0 16px;
+      font-size: clamp(0.7rem, 0.95vw, 0.95rem);
+      font-weight: 500;
+      line-height: 1.5;
+      text-align: justify;
+      will-change: transform;
+      animation: grain-drift 60s linear infinite;
+    }
+    #slop-wall-inner p { margin-bottom: 0.9em; }
     /* the grain slides slowly instead of flickering */
     @keyframes grain-drift { from { background-position: 0 0; } to { background-position: 640px 360px; } }
     /* static rings that ripple out from under the machine as it digests slop */
@@ -253,10 +279,10 @@
     </svg>
   </div>
   </div>
-  <p id="subhead"></p>
+  <p id="subhead" class="noise-text"></p>
 </div>
 
-<div id="feed"></div>
+<div id="feed"><div id="slop-wall" aria-hidden="true"><div id="slop-wall-inner" class="noise-text"></div></div></div>
 
 <div id="controls">
   <div id="noise-label">turn the slop into white noise</div>
@@ -264,6 +290,7 @@
   <button id="pause-btn" onclick="togglePause()">&#9646;&#9646;&nbsp;pause</button>
 </div>
 
+<script src="slop-generator.js"></script>
 <script>
 // ── Noise texture ─────────────────────────────────────────────────────────────
 // A small pool of static frames is generated once. The page-wide texture (the
@@ -327,7 +354,7 @@
 function fitTitle() {
   const box = document.getElementById('title');
   const tc = document.createElement('canvas').getContext('2d');
-  const maxW = window.innerWidth * 0.95, maxH = window.innerHeight * 0.33;
+  const maxW = window.innerWidth * 0.95, maxH = window.innerHeight * 0.27;
   const fit = lines => {
     let size = 8;
     while (size < 1000) {
@@ -348,9 +375,9 @@ window.addEventListener('resize', fitTitle);
 
 // ── Splash + sequential subheads ──────────────────────────────────────────────
 const SUBHEADS = [
-  "use all the boring for something useful,",
-  "like drifting into an algorithmic slumber,",
-  "after all you can't spell napping without AI"
+  "AI is already white noise, might as well use it to fall asleep",
+  "Ready to drift into an algorithmic slumber?",
+  "Slop til you drop"
 ];
 const splash  = document.getElementById('splash');
 const subEl   = document.getElementById('subhead');
@@ -364,8 +391,8 @@ function showSubhead(text) {
 }
 
 setTimeout(() => showSubhead(SUBHEADS[0]), 1200);
-setTimeout(() => showSubhead(SUBHEADS[1]), 4200);
-setTimeout(() => showSubhead(SUBHEADS[2]), 7200);
+setTimeout(() => showSubhead(SUBHEADS[1]), 5200);
+setTimeout(() => showSubhead(SUBHEADS[2]), 8700);
 
 // After the three subheads, the headline fades and the sleeping machine
 // glides to the middle of the screen, where it stays while the slop plays.
@@ -378,94 +405,19 @@ function centerMachine() {
   const target = Math.min(window.innerHeight / 2, controlsTop / 2 + 10);
   machineDy += target - (r.top + r.height / 2);
   machineWrap.style.transform = `translateY(${machineDy}px)`;
+  document.getElementById('slop-wall').style.setProperty('--fade', (controlsTop - 24) + 'px');
 }
 setTimeout(() => {
   splash.classList.add('settled');
   centerMachine();
-}, 10200);
+}, 11800);
 window.addEventListener('resize', () => requestAnimationFrame(centerMachine));
 
-// ── API sources ───────────────────────────────────────────────────────────────
-const SOURCES = [
-  {
-    fetch: async () => {
-      const d = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary').then(r => r.json());
-      const text = (d.extract || '').split('\n')[0].trim().slice(0, 380);
-      return text.length > 40 ? [{ tag: 'WIKIPEDIA', text }] : [];
-    }
-  },
-  {
-    fetch: async () => {
-      const d = await fetch('https://opentdb.com/api.php?amount=6&encode=url3986').then(r => r.json());
-      if (d.response_code !== 0) return [];
-      return d.results.map(q => ({
-        tag: decodeURIComponent(q.category),
-        text: decodeURIComponent(q.question)
-      }));
-    }
-  },
-  {
-    fetch: async () => {
-      const d = await fetch('https://api.adviceslip.com/advice', { cache: 'no-cache' }).then(r => r.json());
-      return [{ tag: 'ADVICE', text: d.slip.advice }];
-    }
-  },
-  {
-    fetch: async () => {
-      const d = await fetch('https://icanhazdadjoke.com/', { headers: { Accept: 'application/json' } }).then(r => r.json());
-      return [{ tag: 'DAD JOKE', text: d.joke }];
-    }
-  },
-  {
-    fetch: async () => {
-      const d = await fetch('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en').then(r => r.json());
-      return [{ tag: 'USELESS FACT', text: d.text }];
-    }
-  },
-  {
-    fetch: async () => {
-      const d = await fetch('https://www.reddit.com/r/Showerthoughts/hot.json?limit=25&raw_json=1').then(r => r.json());
-      return d.data.children
-        .filter(c => !c.data.stickied && c.data.title.length > 20)
-        .slice(0, 10)
-        .map(c => ({ tag: 'SHOWER THOUGHT', text: c.data.title }));
-    }
-  },
-  {
-    fetch: async () => {
-      const d = await fetch('https://www.reddit.com/r/todayilearned/hot.json?limit=25&raw_json=1').then(r => r.json());
-      return d.data.children
-        .filter(c => !c.data.stickied)
-        .slice(0, 8)
-        .map(c => ({ tag: 'TODAY I LEARNED', text: c.data.title.replace(/^TIL\s+that?\s*/i, '') }));
-    }
-  },
-  {
-    fetch: async () => {
-      const d = await fetch('https://www.reddit.com/r/AskReddit/hot.json?limit=25&raw_json=1').then(r => r.json());
-      return d.data.children
-        .filter(c => !c.data.stickied && c.data.title.length > 20)
-        .slice(0, 8)
-        .map(c => ({ tag: 'ASK REDDIT', text: c.data.title }));
-    }
-  },
-  {
-    fetch: async () => {
-      const ids = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json').then(r => r.json());
-      const picks = [...ids].sort(() => Math.random() - 0.5).slice(0, 6);
-      const items = await Promise.all(
-        picks.map(id => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(r => r.json()).catch(() => null))
-      );
-      return items.filter(i => i?.title).map(i => ({ tag: 'HACKER NEWS', text: i.title }));
-    }
-  }
-];
-
-// ── Queue ─────────────────────────────────────────────────────────────────────
-let apiQueue  = [];
+// ── Slop supply ───────────────────────────────────────────────────────────────
+// Mostly freshly generated AI slop (slop-generator.js), mixed with the
+// hand-written pieces in data/slop.json.
 let fallback  = [];
 let fallbackIdx = 0;
-let fetching  = false;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -476,33 +428,15 @@ function shuffle(arr) {
   return a;
 }
 
-async function refill() {
-  if (fetching || apiQueue.length > 10) return;
-  fetching = true;
-  const src = SOURCES[Math.floor(Math.random() * SOURCES.length)];
-  try {
-    const items = await src.fetch();
-    apiQueue.push(...shuffle(items.filter(i => i.text?.trim().length > 10)));
-  } catch (_) {}
-  fetching = false;
-}
-
 function nextItem() {
-  if (apiQueue.length < 6) refill();
-  if (apiQueue.length > 0) return apiQueue.shift();
-  if (fallbackIdx >= fallback.length) { fallback = shuffle(fallback); fallbackIdx = 0; }
-  return fallback[fallbackIdx++] || { tag: '···', text: '···' };
+  if (fallback.length && Math.random() < 0.3) {
+    if (fallbackIdx >= fallback.length) { fallback = shuffle(fallback); fallbackIdx = 0; }
+    return fallback[fallbackIdx++];
+  }
+  return makeSlop();
 }
 
-// Pre-fetch aggressively while splash shows
-for (let i = 0; i < 5; i++) {
-  const src = SOURCES[Math.floor(Math.random() * SOURCES.length)];
-  src.fetch()
-    .then(items => apiQueue.push(...shuffle(items.filter(i => i.text?.trim().length > 10))))
-    .catch(() => {});
-}
-
-fetch('data/slop.json').then(r => r.json()).then(data => { fallback = shuffle(data); });
+fetch('data/slop.json').then(r => r.json()).then(data => { fallback = shuffle(data); }).catch(() => {});
 
 // ── Feed ──────────────────────────────────────────────────────────────────────
 const feed     = document.getElementById('feed');
@@ -549,8 +483,12 @@ function spawnItem() {
   const floor = document.getElementById('controls').getBoundingClientRect().top - 18;
   const avoid = [machineEl.getBoundingClientRect(), ...[...feed.querySelectorAll('.slop-item')]
     .filter(o => o !== el).map(o => o.getBoundingClientRect())];
-  const overlaps = (x, y) => avoid.some(r =>
-    x - maxW / 2 < r.right && x + maxW / 2 > r.left && y - h / 2 < r.bottom && y + h / 2 > r.top);
+  const overlaps = (x, y) => avoid.some((r, i) => {
+    const pad = i === 0 ? 0 : 0.1;   // other slop may overlap a little; the machine may not
+    const ix = Math.min(x + maxW / 2, r.right) - Math.max(x - maxW / 2, r.left);
+    const iy = Math.min(y + h / 2, r.bottom) - Math.max(y - h / 2, r.top);
+    return ix > 0 && iy > 0 && ix * iy > pad * Math.min(maxW * h, r.width * r.height);
+  });
   let x, y;
   for (let tries = 0; tries < 14; tries++) {
     const a = Math.random() * Math.PI * 2;
@@ -563,11 +501,11 @@ function spawnItem() {
 
   const { x: tx, y: ty } = intakePoint();
   const dx = tx - x, dy = ty - y;
-  const dur = 17000 + Math.random() * 7000;
+  const dur = 14000 + Math.random() * 6000;
   const anim = el.animate([
     { transform: 'translate(-50%, -50%) scale(1)', opacity: 0, filter: 'blur(2px)' },
-    { opacity: 0.75, filter: 'blur(0px)', offset: 0.18 },
-    { opacity: 0.6, offset: 0.75 },
+    { opacity: 0.85, filter: 'blur(0px)', offset: 0.18 },
+    { opacity: 0.7, offset: 0.75 },
     { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.1)`, opacity: 0, filter: 'blur(3px)' }
   ], { duration: dur, easing: 'cubic-bezier(.4,0,.7,1)', fill: 'forwards' });
   if (paused) anim.pause();
@@ -584,16 +522,43 @@ function togglePause() {
   pauseBtn.innerHTML = paused ? '&#9654;&nbsp;resume' : '&#9646;&#9646;&nbsp;pause';
 }
 
-// Once the machine settles, slop starts drifting in: a few quickly, then a calm trickle
+// ── The wall: endless AI slop scrolling slowly upward behind everything ──────
+const wall      = document.getElementById('slop-wall');
+const wallInner = document.getElementById('slop-wall-inner');
+let wallY = 0, wallLast = 0;
+function fillWall() {
+  while (wallInner.offsetHeight + wallY < window.innerHeight * 2) {
+    const para = document.createElement('p');
+    para.textContent = makeSlopParagraph();
+    wallInner.appendChild(para);
+  }
+}
+function scrollWall(now) {
+  const dt = Math.min(100, now - (wallLast || now)); wallLast = now;
+  if (!paused && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) wallY -= dt * 0.014; // ~14px a second
+  const first = wallInner.firstElementChild;
+  if (first && first.offsetHeight + wallY < 0) {   // scrolled off the top: recycle it
+    wallY += first.offsetHeight + parseFloat(getComputedStyle(first).marginBottom);
+    first.remove();
+  }
+  fillWall();
+  wallInner.style.transform = `translateY(${wallY}px)`;
+  requestAnimationFrame(scrollWall);
+}
+
+// Once the machine settles, the wall fades up and slop starts pouring in
 setTimeout(() => {
-  for (let i = 0; i < 5; i++) setTimeout(() => { if (!paused) spawnItem(); }, i * 900);
+  fillWall();
+  wall.classList.add('on');
+  requestAnimationFrame(scrollWall);
+  for (let i = 0; i < 8; i++) setTimeout(() => { if (!paused) spawnItem(); }, i * 450);
   setTimeout(function scheduleSpawn() {
     if (!paused) spawnItem();
-    // calmer trickle on smaller screens
+    // a little less on smaller screens
     const roomy = Math.min(1, Math.sqrt(window.innerWidth * window.innerHeight / (1440 * 900)));
-    setTimeout(scheduleSpawn, (2400 + Math.random() * 1600) / Math.max(0.55, roomy));
-  }, 5000);
-}, 10600);
+    setTimeout(scheduleSpawn, (900 + Math.random() * 700) / Math.max(0.55, roomy));
+  }, 3600);
+}, 12200);
 
 // ── Slop noise audio ──────────────────────────────────────────────────────────
 // Every piece of slop that passes through the feed is turned into noise: its

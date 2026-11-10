@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SLOP 'TIL YOU DROP</title>
+  <title>SLOP TIL YOU DROP</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -26,6 +26,46 @@
       -webkit-text-fill-color: transparent;
     }
 
+    /* ── Sleeping face ── */
+    #face { animation: breathe 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    #mouth { animation: snore 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+    @keyframes snore   { 0%, 100% { transform: scale(0.75, 0.6); } 50% { transform: scale(1.1, 1.25); } }
+    #zzz { position: absolute; left: 60%; top: -6%; width: 26%; height: 22%; pointer-events: none; }
+    .z {
+      position: absolute; bottom: 0; left: 0;
+      font-weight: 800; line-height: 1;
+      font-size: clamp(1.4rem, 4.6vh, 3.4rem);
+      opacity: 0;
+      animation: zfloat 6s ease-in infinite;
+    }
+    .z:nth-child(1) { font-size: clamp(1.1rem, 3.6vh, 2.6rem); }
+    .z:nth-child(2) { animation-delay: 2s; left: 18%; }
+    .z:nth-child(3) { animation-delay: 4s; left: 36%; font-size: clamp(1.7rem, 6vh, 4.4rem); }
+    @keyframes zfloat {
+      0%   { opacity: 0; transform: translate(0, 0) scale(0.7) rotate(-8deg); }
+      15%  { opacity: 1; }
+      75%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(170%, -95%) scale(1.1) rotate(10deg); }
+    }
+    /* ── Machine sways gently as it sleeps, and hums faintly when on ── */
+    #machine { animation: sway 5s ease-in-out infinite; transform-origin: 50% 100%; }
+    @keyframes sway {
+      0%, 100% { transform: translateY(0) rotate(-0.8deg); }
+      50%      { transform: translateY(-5px) rotate(0.8deg); }
+    }
+    #machine svg { transition: transform 0.3s; }
+    #machine.on svg { animation: hum 0.18s linear infinite; }
+    @keyframes hum {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(0.6px, -0.4px); }
+      50% { transform: translate(-0.5px, 0.5px); }
+      75% { transform: translate(0.4px, 0.3px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #face, #mouth, .z, #machine, #machine.on svg { animation: none; }
+      .z { opacity: 1; position: static; display: inline-block; margin-right: 0.2em; }
+    }
     /* ── Splash ── */
     #splash {
       position: fixed; inset: 0; z-index: 20;
@@ -35,14 +75,37 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 1.5s ease;
+      padding-bottom: 9rem;
     }
+    /* ── Sound machine ── */
+    #machine {
+      position: relative;
+      width: min(90vw, calc(34vh * 1000 / 560), 950px);
+      aspect-ratio: 1000 / 560;
+    }
+    #machine svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
     #title {
+      margin-bottom: 5vh;
       font-weight: 800;
       letter-spacing: -0.02em;
       text-align: center;
       line-height: 0.93;
       /* font-size set by JS */
     }
+    #machine-knob {
+      position: absolute;
+      left: 50%; top: 30.4%;
+      width: 22%; aspect-ratio: 2.4 / 1;
+      transform: translate(-50%, -50%);
+      border: none; background: transparent; border-radius: 50%;
+      cursor: pointer;
+      pointer-events: all;
+    }
+    #machine-knob:focus-visible { outline: 2px solid rgba(0,0,0,0.5); outline-offset: 4px; }
+    #led { fill: #c9c9c9; transition: fill 0.4s, filter 0.4s; }
+    #machine.on #led { fill: #6fdc8c; filter: drop-shadow(0 0 6px #6fdc8c); }
+    #knob-cap { transition: transform 0.15s; transform-origin: 500px 170px; }
+    #machine-knob:active ~ svg #knob-cap { transform: scale(0.94); }
     #subhead {
       margin-top: 1.8rem;
       font-size: clamp(0.85rem, 1.8vw, 1.2rem);
@@ -92,6 +155,7 @@
       align-items: center; gap: 0.65rem;
       pointer-events: none;
     }
+    #noise-label, #noise-btn { white-space: nowrap; }
     #noise-label {
       font-size: 0.68rem;
       color: rgba(0, 0, 0, 0.28);
@@ -130,27 +194,72 @@
 <body>
 
 <div id="splash">
-  <h1 id="title" class="noise-text">SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
+  <h1 id="title" class="noise-text">SLOP TIL YOU DROP</h1>
+  <div id="machine">
+    <button id="machine-knob" onclick="toggleNoise()" aria-label="Turn slop noise on or off"></button>
+    <div id="zzz" aria-hidden="true"><span class="z noise-text">z</span><span class="z noise-text">z</span><span class="z noise-text">Z</span></div>
+    <svg viewBox="0 0 1000 560" aria-hidden="true">
+      <defs>
+        <linearGradient id="body-shade" x1="0" x2="1">
+          <stop offset="0" stop-color="#cfcfcf"/><stop offset="0.18" stop-color="#ececec"/>
+          <stop offset="0.45" stop-color="#f8f8f8"/><stop offset="0.8" stop-color="#e6e6e6"/>
+          <stop offset="1" stop-color="#c4c4c4"/>
+        </linearGradient>
+        <radialGradient id="cap-shade" cx="0.45" cy="0.35" r="0.75">
+          <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e2e2e2"/>
+        </radialGradient>
+        <radialGradient id="knob-shade" cx="0.4" cy="0.3" r="0.8">
+          <stop offset="0" stop-color="#fdfdfd"/><stop offset="1" stop-color="#d4d4d4"/>
+        </radialGradient>
+      </defs>
+      <path d="M60 170 L60 420 A440 90 0 0 0 940 420 L940 170 Z" fill="url(#body-shade)" stroke="#bdbdbd" stroke-width="1.5"/>
+      <g stroke="#6a6a6a" stroke-linecap="round" opacity="0.75">
+        <line x1="69.6" y1="206.7" x2="69.6" y2="238.7" stroke-width="1.9"/><line x1="77.0" y1="212.8" x2="77.0" y2="244.8" stroke-width="2.5"/><line x1="86.5" y1="218.8" x2="86.5" y2="250.8" stroke-width="3.1"/><line x1="98.0" y1="224.6" x2="98.0" y2="256.6" stroke-width="3.7"/><line x1="111.5" y1="230.3" x2="111.5" y2="262.3" stroke-width="4.2"/><line x1="126.9" y1="235.7" x2="126.9" y2="267.7" stroke-width="4.8"/><line x1="144.0" y1="240.9" x2="144.0" y2="272.9" stroke-width="5.3"/><line x1="162.9" y1="245.9" x2="162.9" y2="277.9" stroke-width="5.8"/><line x1="183.5" y1="250.5" x2="183.5" y2="282.5" stroke-width="6.3"/><line x1="205.6" y1="254.9" x2="205.6" y2="286.9" stroke-width="6.7"/><line x1="229.1" y1="258.9" x2="229.1" y2="290.9" stroke-width="7.1"/><line x1="254.0" y1="262.6" x2="254.0" y2="294.6" stroke-width="7.5"/><line x1="280.0" y1="265.9" x2="280.0" y2="297.9" stroke-width="7.8"/><line x1="307.1" y1="268.9" x2="307.1" y2="300.9" stroke-width="8.1"/><line x1="335.2" y1="271.4" x2="335.2" y2="303.4" stroke-width="8.3"/><line x1="364.0" y1="273.6" x2="364.0" y2="305.6" stroke-width="8.6"/><line x1="393.6" y1="275.3" x2="393.6" y2="307.3" stroke-width="8.7"/><line x1="423.6" y1="276.6" x2="423.6" y2="308.6" stroke-width="8.9"/><line x1="454.0" y1="277.5" x2="454.0" y2="309.5" stroke-width="9.0"/><line x1="484.6" y1="277.9" x2="484.6" y2="309.9" stroke-width="9.0"/><line x1="515.4" y1="277.9" x2="515.4" y2="309.9" stroke-width="9.0"/><line x1="546.0" y1="277.5" x2="546.0" y2="309.5" stroke-width="9.0"/><line x1="576.4" y1="276.6" x2="576.4" y2="308.6" stroke-width="8.9"/><line x1="606.4" y1="275.3" x2="606.4" y2="307.3" stroke-width="8.7"/><line x1="636.0" y1="273.6" x2="636.0" y2="305.6" stroke-width="8.6"/><line x1="664.8" y1="271.4" x2="664.8" y2="303.4" stroke-width="8.3"/><line x1="692.9" y1="268.9" x2="692.9" y2="300.9" stroke-width="8.1"/><line x1="720.0" y1="265.9" x2="720.0" y2="297.9" stroke-width="7.8"/><line x1="746.0" y1="262.6" x2="746.0" y2="294.6" stroke-width="7.5"/><line x1="770.9" y1="258.9" x2="770.9" y2="290.9" stroke-width="7.1"/><line x1="794.4" y1="254.9" x2="794.4" y2="286.9" stroke-width="6.7"/><line x1="816.5" y1="250.5" x2="816.5" y2="282.5" stroke-width="6.3"/><line x1="837.1" y1="245.9" x2="837.1" y2="277.9" stroke-width="5.8"/><line x1="856.0" y1="240.9" x2="856.0" y2="272.9" stroke-width="5.3"/><line x1="873.1" y1="235.7" x2="873.1" y2="267.7" stroke-width="4.8"/><line x1="888.5" y1="230.3" x2="888.5" y2="262.3" stroke-width="4.2"/><line x1="902.0" y1="224.6" x2="902.0" y2="256.6" stroke-width="3.7"/><line x1="913.5" y1="218.8" x2="913.5" y2="250.8" stroke-width="3.1"/><line x1="923.0" y1="212.8" x2="923.0" y2="244.8" stroke-width="2.5"/><line x1="930.4" y1="206.7" x2="930.4" y2="238.7" stroke-width="1.9"/>
+      </g>
+      <g id="face-pos" transform="translate(0 -14)">
+      <g id="face">
+        <ellipse cx="372" cy="438" rx="34" ry="17" fill="#f3a9b8" opacity="0.45"/>
+        <ellipse cx="628" cy="438" rx="34" ry="17" fill="#f3a9b8" opacity="0.45"/>
+        <g fill="none" stroke="#5a5a5a" stroke-width="8" stroke-linecap="round">
+          <path d="M378 400 Q412 426 446 400"/>
+          <path d="M554 400 Q588 426 622 400"/>
+        </g>
+        <ellipse id="mouth" cx="500" cy="452" rx="11" ry="8" fill="#6a6a6a"/>
+      </g>
+      </g>
+      <ellipse cx="500" cy="170" rx="440" ry="90" fill="url(#cap-shade)" stroke="#bdbdbd" stroke-width="1.5"/>
+      <ellipse cx="500" cy="170" rx="330" ry="66" fill="none" stroke="rgba(0,0,0,0.07)" stroke-width="2"/>
+      <ellipse cx="500" cy="176" rx="80" ry="22" fill="rgba(0,0,0,0.10)"/>
+      <g id="knob-cap">
+        <ellipse cx="500" cy="170" rx="74" ry="20" fill="url(#knob-shade)" stroke="#c2c2c2" stroke-width="1.5"/>
+      </g>
+      <circle id="led" cx="610" cy="186" r="5"/>
+      <path d="M60 420 A440 90 0 0 0 940 420" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="3"/>
+    </svg>
+  </div>
   <p id="subhead"></p>
 </div>
 
 <div id="feed"></div>
 
 <div id="controls">
-  <div id="noise-label">put on white noise for the full experience</div>
-  <button id="noise-btn" onclick="toggleNoise()">&#9654;&nbsp;&nbsp;white noise</button>
+  <div id="noise-label">turn the slop into white noise</div>
+  <button id="noise-btn" onclick="toggleNoise()">&#9654;&nbsp;&nbsp;slop noise</button>
   <button id="pause-btn" onclick="togglePause()">&#9646;&#9646;&nbsp;pause</button>
 </div>
 
 <script>
 // ── Noise texture ─────────────────────────────────────────────────────────────
+// A small pool of static frames is generated once. The page-wide texture (the
+// scrolling slop) changes slowly; the headline flips through frames at TV-static
+// speed, jumping the grain to a random offset each flip so it never repeats.
 (function () {
-  const NW = 640, NH = 360;
+  const NW = 640, NH = 360, FRAMES = 8;
   const nc = document.createElement('canvas');
   nc.width = NW; nc.height = NH;
   const nctx = nc.getContext('2d');
-
-  function tick() {
+  const frames = [];
+  for (let f = 0; f < FRAMES; f++) {
     const id = nctx.createImageData(NW, NH);
     const d  = id.data;
     for (let i = 0; i < d.length; i += 4) {
@@ -159,24 +268,53 @@
       d[i+3] = 255;
     }
     nctx.putImageData(id, 0, 0);
-    document.documentElement.style.setProperty('--noise-url', `url('${nc.toDataURL()}')`);
+    const url = `url('${nc.toDataURL()}')`;
+    frames.push(url);
+    new Image().src = url.slice(5, -2); // decode up front so flips are instant
   }
-  tick();
-  setInterval(tick, 220);
+  const pick = prev => { let f; do { f = frames[Math.random() * FRAMES | 0]; } while (f === prev); return f; };
+
+  // Page-wide texture: slow drift
+  let slow = frames[0];
+  document.documentElement.style.setProperty('--noise-url', slow);
+  setInterval(() => { slow = pick(slow); document.documentElement.style.setProperty('--noise-url', slow); }, 220);
+
+  // Headline: fast TV static (gentler when the viewer prefers reduced motion)
+  const title = document.getElementById('title');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FAST_MS = reduce ? 400 : 55;
+  let fast = frames[1], last = 0;
+  (function flicker(now) {
+    if (!document.body.contains(title)) return; // splash removed
+    if (now - last >= FAST_MS) {
+      last = now;
+      fast = pick(fast);
+      title.style.setProperty('--noise-url', fast);
+      title.style.backgroundPosition = `${Math.random() * NW | 0}px ${Math.random() * NH | 0}px`;
+    }
+    requestAnimationFrame(flicker);
+  })(0);
 })();
 
-// ── Fit title to screen width ─────────────────────────────────────────────────
+// ── Fit title above the machine: one or two lines, whichever is bigger ──────
 function fitTitle() {
-  const lines = ["SLOP 'TIL", "YOU DROP"];
+  const box = document.getElementById('title');
   const tc = document.createElement('canvas').getContext('2d');
-  const target = window.innerWidth * 0.97;
-  let size = 10;
-  while (size < 800) {
-    tc.font = `800 ${size + 4}px system-ui, -apple-system, sans-serif`;
-    if (Math.max(...lines.map(l => tc.measureText(l).width)) > target) break;
-    size += 4;
-  }
-  document.getElementById('title').style.fontSize = size + 'px';
+  const maxW = window.innerWidth * 0.95, maxH = window.innerHeight * 0.33;
+  const fit = lines => {
+    let size = 8;
+    while (size < 1000) {
+      const next = size + 2;
+      tc.font = `800 ${next}px -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif`;
+      const w = Math.max(...lines.map(l => tc.measureText(l).width)) * 1.03;
+      if (w > maxW || next * 0.95 * lines.length > maxH) break;
+      size = next;
+    }
+    return size;
+  };
+  const one = fit(['SLOP TIL YOU DROP']), two = fit(['SLOP TIL', 'YOU DROP']);
+  box.innerHTML = two > one ? 'SLOP&nbsp;TIL<br>YOU&nbsp;DROP' : 'SLOP TIL YOU DROP';
+  box.style.fontSize = Math.max(one, two) + 'px';
 }
 fitTitle();
 window.addEventListener('resize', fitTitle);
@@ -350,6 +488,7 @@ function spawnItem(startY) {
 
   el.innerHTML = `<span class="item-tag">${item.tag}</span>${item.text.replace(/\n/g, '<br>')}`;
   feed.appendChild(el);
+  queueForAudio(item);
   setTimeout(() => el.remove(), (dur + 0.5) * 1000);
 }
 
@@ -377,20 +516,74 @@ setTimeout(() => {
   }());
 }, 9700);
 
-// ── White noise audio ─────────────────────────────────────────────────────────
-let audioCtx = null, noiseNode = null, gainNode = null, noiseOn = false;
+// ── Slop noise audio ──────────────────────────────────────────────────────────
+// Every piece of slop that passes through the feed is turned into noise: its
+// characters seed and continually re-scramble the random samples, which are
+// then shaped into a soft pink "fan" hum at a constant level. Chunks overlap
+// with equal-power crossfades, so the result is one steady, unbroken hum that
+// keeps feeding itself from the live slop.
+let audioCtx = null, masterGain = null, filterNode = null, noiseOn = false;
+let nextChunkAt = 0, schedulerId = null;
+const audioQueue = [];
+const CHUNK_SEC = 8, FADE_SEC = 3;
+const FADE_IN  = new Float32Array(256).map((_, i) => Math.sin((i / 255) * Math.PI / 2));
+const FADE_OUT = new Float32Array(256).map((_, i) => Math.cos((i / 255) * Math.PI / 2));
 
-function buildNoise(ctx) {
-  const sz  = ctx.sampleRate * 3;
-  const buf = ctx.createBuffer(1, sz, ctx.sampleRate);
+function queueForAudio(item) {
+  audioQueue.push(item);
+  if (audioQueue.length > 30) audioQueue.shift();
+}
+
+function hashText(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0 || 1;
+}
+
+function slopToBuffer(ctx, text) {
+  const n   = Math.floor(ctx.sampleRate * CHUNK_SEC);
+  const buf = ctx.createBuffer(1, n, ctx.sampleRate);
   const d   = buf.getChannelData(0);
-  for (let i = 0; i < sz; i++) d[i] = Math.random() * 2 - 1;
+  const len = text.length;
+  let state = hashText(text);
+  let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+  for (let i = 0; i < n; i++) {
+    // xorshift PRNG, re-scrambled by the slop's characters as it goes
+    state ^= state << 13; state ^= state >>> 17; state ^= state << 5;
+    state = (state ^ Math.imul(text.charCodeAt(i % len), 2654435761)) >>> 0;
+    const w = (state / 4294967296) * 2 - 1;
+    // pink-noise filter (Paul Kellet): the deeper, softer hiss of a sound machine
+    b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759;
+    b2 = 0.96900 * b2 + w * 0.1538520; b3 = 0.86650 * b3 + w * 0.3104856;
+    b4 = 0.55000 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.0168980;
+    d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+    b6 = w * 0.115926;
+  }
+  return buf;
+}
+
+function scheduleChunk(ctx, dest, t, item) {
   const src = ctx.createBufferSource();
-  src.buffer = buf; src.loop = true;
-  const f = ctx.createBiquadFilter();
-  f.type = 'lowpass'; f.frequency.value = 800;
-  src.connect(f);
-  return { source: src, filter: f };
+  src.buffer = slopToBuffer(ctx, item.text || '···');
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.setValueCurveAtTime(FADE_IN, t, FADE_SEC);
+  g.gain.setValueCurveAtTime(FADE_OUT, t + CHUNK_SEC - FADE_SEC, FADE_SEC);
+  src.connect(g); g.connect(dest);
+  src.start(t); src.stop(t + CHUNK_SEC);
+  return t + CHUNK_SEC - FADE_SEC;
+}
+
+function scheduleChunks() {
+  // keep two chunks queued ahead so the hum never gaps
+  while (nextChunkAt < audioCtx.currentTime + CHUNK_SEC * 2) {
+    const item = audioQueue.shift() || nextItem();
+    const t = Math.max(nextChunkAt, audioCtx.currentTime + 0.05);
+    nextChunkAt = scheduleChunk(audioCtx, filterNode, t, item);
+    setTimeout(() => {
+      if (noiseOn) document.getElementById('noise-label').textContent = `now humming: ${item.tag}`;
+    }, Math.max(0, (t + FADE_SEC - audioCtx.currentTime) * 1000));
+  }
 }
 
 function toggleNoise() {
@@ -398,25 +591,34 @@ function toggleNoise() {
   if (!noiseOn) {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      gainNode = audioCtx.createGain();
-      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      gainNode.connect(audioCtx.destination);
+      filterNode = audioCtx.createBiquadFilter();
+      filterNode.type = 'lowpass'; filterNode.frequency.value = 2200;
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0;
+      filterNode.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    const { source, filter } = buildNoise(audioCtx);
-    filter.connect(gainNode);
-    source.start();
-    noiseNode = source;
-    gainNode.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 1.5);
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 2);
+    nextChunkAt = audioCtx.currentTime;
+    scheduleChunks();
+    schedulerId = setInterval(scheduleChunks, 500);
     noiseOn = true;
+    document.getElementById('machine')?.classList.add('on');
     btn.classList.add('on');
-    btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;white noise';
+    btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;slop noise';
   } else {
-    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
-    setTimeout(() => { if (noiseNode) { noiseNode.stop(); noiseNode = null; } }, 1400);
     noiseOn = false;
+    document.getElementById('machine')?.classList.remove('on');
+    clearInterval(schedulerId);
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
     btn.classList.remove('on');
-    btn.innerHTML = '&#9654;&nbsp;&nbsp;white noise';
+    btn.innerHTML = '&#9654;&nbsp;&nbsp;slop noise';
+    document.getElementById('noise-label').textContent = 'turn the slop into white noise';
   }
 }
 </script>

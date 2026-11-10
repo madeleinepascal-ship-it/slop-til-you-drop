@@ -48,8 +48,22 @@
       75%  { opacity: 1; }
       100% { opacity: 0; transform: translate(170%, -95%) scale(1.1) rotate(10deg); }
     }
+    /* ── Machine sways gently as it sleeps, and hums faintly when on ── */
+    #machine { animation: sway 5s ease-in-out infinite; transform-origin: 50% 100%; }
+    @keyframes sway {
+      0%, 100% { transform: translateY(0) rotate(-0.8deg); }
+      50%      { transform: translateY(-5px) rotate(0.8deg); }
+    }
+    #machine svg { transition: transform 0.3s; }
+    #machine.on svg { animation: hum 0.18s linear infinite; }
+    @keyframes hum {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(0.6px, -0.4px); }
+      50% { transform: translate(-0.5px, 0.5px); }
+      75% { transform: translate(0.4px, 0.3px); }
+    }
     @media (prefers-reduced-motion: reduce) {
-      #face, #mouth, .z { animation: none; }
+      #face, #mouth, .z, #machine, #machine.on svg { animation: none; }
       .z { opacity: 1; position: static; display: inline-block; margin-right: 0.2em; }
     }
     /* ── Splash ── */

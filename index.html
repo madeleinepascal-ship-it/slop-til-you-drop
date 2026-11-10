@@ -250,13 +250,16 @@
 
 <script>
 // ── Noise texture ─────────────────────────────────────────────────────────────
+// A small pool of static frames is generated once. The page-wide texture (the
+// scrolling slop) changes slowly; the headline flips through frames at TV-static
+// speed, jumping the grain to a random offset each flip so it never repeats.
 (function () {
-  const NW = 640, NH = 360;
+  const NW = 640, NH = 360, FRAMES = 8;
   const nc = document.createElement('canvas');
   nc.width = NW; nc.height = NH;
   const nctx = nc.getContext('2d');
-
-  function tick() {
+  const frames = [];
+  for (let f = 0; f < FRAMES; f++) {
     const id = nctx.createImageData(NW, NH);
     const d  = id.data;
     for (let i = 0; i < d.length; i += 4) {
@@ -265,10 +268,32 @@
       d[i+3] = 255;
     }
     nctx.putImageData(id, 0, 0);
-    document.documentElement.style.setProperty('--noise-url', `url('${nc.toDataURL()}')`);
+    const url = `url('${nc.toDataURL()}')`;
+    frames.push(url);
+    new Image().src = url.slice(5, -2); // decode up front so flips are instant
   }
-  tick();
-  setInterval(tick, 220);
+  const pick = prev => { let f; do { f = frames[Math.random() * FRAMES | 0]; } while (f === prev); return f; };
+
+  // Page-wide texture: slow drift
+  let slow = frames[0];
+  document.documentElement.style.setProperty('--noise-url', slow);
+  setInterval(() => { slow = pick(slow); document.documentElement.style.setProperty('--noise-url', slow); }, 220);
+
+  // Headline: fast TV static (gentler when the viewer prefers reduced motion)
+  const title = document.getElementById('title');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FAST_MS = reduce ? 400 : 55;
+  let fast = frames[1], last = 0;
+  (function flicker(now) {
+    if (!document.body.contains(title)) return; // splash removed
+    if (now - last >= FAST_MS) {
+      last = now;
+      fast = pick(fast);
+      title.style.setProperty('--noise-url', fast);
+      title.style.backgroundPosition = `${Math.random() * NW | 0}px ${Math.random() * NH | 0}px`;
+    }
+    requestAnimationFrame(flicker);
+  })(0);
 })();
 
 // ── Fit title above the machine: one or two lines, whichever is bigger ──────

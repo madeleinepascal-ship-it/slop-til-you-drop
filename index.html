@@ -137,8 +137,8 @@
 <div id="feed"></div>
 
 <div id="controls">
-  <div id="noise-label">put on white noise for the full experience</div>
-  <button id="noise-btn" onclick="toggleNoise()">&#9654;&nbsp;&nbsp;white noise</button>
+  <div id="noise-label">turn the slop into white noise</div>
+  <button id="noise-btn" onclick="toggleNoise()">&#9654;&nbsp;&nbsp;slop noise</button>
   <button id="pause-btn" onclick="togglePause()">&#9646;&#9646;&nbsp;pause</button>
 </div>
 
@@ -350,6 +350,7 @@ function spawnItem(startY) {
 
   el.innerHTML = `<span class="item-tag">${item.tag}</span>${item.text.replace(/\n/g, '<br>')}`;
   feed.appendChild(el);
+  queueForAudio(item);
   setTimeout(() => el.remove(), (dur + 0.5) * 1000);
 }
 
@@ -377,20 +378,70 @@ setTimeout(() => {
   }());
 }, 9700);
 
-// ── White noise audio ─────────────────────────────────────────────────────────
-let audioCtx = null, noiseNode = null, gainNode = null, noiseOn = false;
+// ── Slop noise audio ──────────────────────────────────────────────────────────
+// Every piece of slop that passes through the feed is turned into a few seconds
+// of noise: its characters seed and scramble the samples, and the shape of the
+// text (letters, spaces, punctuation) sets the swell of the volume. Chunks are
+// crossfaded back to back, so the machine feeds itself from the live slop.
+let audioCtx = null, masterGain = null, filterNode = null, noiseOn = false;
+let nextChunkAt = 0, schedulerId = null;
+const audioQueue = [];
+const CHUNK_SEC = 4, FADE_SEC = 1;
 
-function buildNoise(ctx) {
-  const sz  = ctx.sampleRate * 3;
-  const buf = ctx.createBuffer(1, sz, ctx.sampleRate);
+function queueForAudio(item) {
+  audioQueue.push(item);
+  if (audioQueue.length > 30) audioQueue.shift();
+}
+
+function hashText(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0 || 1;
+}
+
+function slopToBuffer(ctx, text) {
+  const n   = Math.floor(ctx.sampleRate * CHUNK_SEC);
+  const buf = ctx.createBuffer(1, n, ctx.sampleRate);
   const d   = buf.getChannelData(0);
-  for (let i = 0; i < sz; i++) d[i] = Math.random() * 2 - 1;
-  const src = ctx.createBufferSource();
-  src.buffer = buf; src.loop = true;
-  const f = ctx.createBiquadFilter();
-  f.type = 'lowpass'; f.frequency.value = 800;
-  src.connect(f);
-  return { source: src, filter: f };
+  const len = text.length;
+  const perChar = n / len;
+  // loudness follows the text: spaces dip, punctuation swells, letters vary
+  const targets = Array.from(text, ch => {
+    if (ch === ' ') return 0.4;
+    if ('.!?,;:'.includes(ch)) return 1;
+    return 0.55 + 0.35 * ((ch.charCodeAt(0) % 26) / 26);
+  });
+  let state = hashText(text), env = 0.7;
+  for (let i = 0; i < n; i++) {
+    const k = Math.floor(i / perChar);
+    const c = text.charCodeAt(k);
+    // xorshift PRNG, re-scrambled by the current character
+    state ^= state << 13; state ^= state >>> 17; state ^= state << 5;
+    state = (state ^ Math.imul(c, 2654435761)) >>> 0;
+    env += ((targets[k] ?? 0.7) - env) * 0.00008;
+    d[i] = ((state / 4294967296) * 2 - 1) * env;
+  }
+  return buf;
+}
+
+function scheduleChunks() {
+  while (nextChunkAt < audioCtx.currentTime + CHUNK_SEC) {
+    const item = audioQueue.shift() || nextItem();
+    const src  = audioCtx.createBufferSource();
+    src.buffer = slopToBuffer(audioCtx, item.text || '···');
+    const g = audioCtx.createGain();
+    const t = Math.max(nextChunkAt, audioCtx.currentTime + 0.05);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(1, t + FADE_SEC);
+    g.gain.setValueAtTime(1, t + CHUNK_SEC - FADE_SEC);
+    g.gain.linearRampToValueAtTime(0, t + CHUNK_SEC);
+    src.connect(g); g.connect(filterNode);
+    src.start(t); src.stop(t + CHUNK_SEC + 0.05);
+    nextChunkAt = t + CHUNK_SEC - FADE_SEC;
+    setTimeout(() => {
+      if (noiseOn) document.getElementById('noise-label').textContent = `now hearing: ${item.tag}`;
+    }, Math.max(0, (t - audioCtx.currentTime) * 1000));
+  }
 }
 
 function toggleNoise() {
@@ -398,25 +449,32 @@ function toggleNoise() {
   if (!noiseOn) {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      gainNode = audioCtx.createGain();
-      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      gainNode.connect(audioCtx.destination);
+      filterNode = audioCtx.createBiquadFilter();
+      filterNode.type = 'lowpass'; filterNode.frequency.value = 900;
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0;
+      filterNode.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    const { source, filter } = buildNoise(audioCtx);
-    filter.connect(gainNode);
-    source.start();
-    noiseNode = source;
-    gainNode.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + 1.5);
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 1.5);
+    nextChunkAt = audioCtx.currentTime;
+    scheduleChunks();
+    schedulerId = setInterval(scheduleChunks, 500);
     noiseOn = true;
     btn.classList.add('on');
-    btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;white noise';
+    btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;slop noise';
   } else {
-    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
-    setTimeout(() => { if (noiseNode) { noiseNode.stop(); noiseNode = null; } }, 1400);
     noiseOn = false;
+    clearInterval(schedulerId);
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
     btn.classList.remove('on');
-    btn.innerHTML = '&#9654;&nbsp;&nbsp;white noise';
+    btn.innerHTML = '&#9654;&nbsp;&nbsp;slop noise';
+    document.getElementById('noise-label').textContent = 'turn the slop into white noise';
   }
 }
 </script>

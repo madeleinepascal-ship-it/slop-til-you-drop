@@ -31,7 +31,7 @@
     #mouth { animation: snore 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
     @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
     @keyframes snore   { 0%, 100% { transform: scale(0.75, 0.6); } 50% { transform: scale(1.1, 1.25); } }
-    #zzz { position: absolute; left: 60%; top: -6%; width: 26%; height: 22%; pointer-events: none; }
+    #zzz { position: absolute; left: 60%; top: 0%; width: 26%; height: 18%; pointer-events: none; }
     .z {
       position: absolute; bottom: 0; left: 0;
       font-weight: 800; line-height: 1;
@@ -46,7 +46,7 @@
       0%   { opacity: 0; transform: translate(0, 0) scale(0.7) rotate(-8deg); }
       15%  { opacity: 1; }
       75%  { opacity: 1; }
-      100% { opacity: 0; transform: translate(170%, -95%) scale(1.1) rotate(10deg); }
+      100% { opacity: 0; transform: translate(170%, -60%) scale(1.05) rotate(10deg); }
     }
     /* ── Machine sways gently as it sleeps, and hums faintly when on ── */
     #machine { animation: sway 5s ease-in-out infinite; transform-origin: 50% 100%; }
@@ -380,8 +380,7 @@ window.addEventListener('resize', fitTitle);
 // Each line can have parts; later parts appear a beat after the first.
 const SUBHEADS = [
   ["AI is already white noise,", "might as well use it to fall asleep"],
-  ["Ready to drift into an algorithmic slumber?"],
-  ["Slop til you drop"]
+  ["Let your new agentic friend Snooz soothe you into an algorithmic slumber"]
 ];
 const BEAT_MS = 1500;
 const splash  = document.getElementById('splash');
@@ -407,7 +406,6 @@ function showSubhead(parts) {
 
 setTimeout(() => showSubhead(SUBHEADS[0]), 1200);
 setTimeout(() => showSubhead(SUBHEADS[1]), 6200);
-setTimeout(() => showSubhead(SUBHEADS[2]), 9700);
 
 // After the three subheads, the headline fades and the sleeping machine
 // glides to the middle of the screen, where it stays while the slop plays.
@@ -429,7 +427,7 @@ function centerMachine() {
 setTimeout(() => {
   splash.classList.add('settled');
   centerMachine();
-}, 12800);
+}, 11800);
 window.addEventListener('resize', () => requestAnimationFrame(centerMachine));
 
 // ── Slop supply ───────────────────────────────────────────────────────────────
@@ -586,7 +584,7 @@ setTimeout(() => {
     const roomy = Math.min(1, Math.sqrt(window.innerWidth * window.innerHeight / (1440 * 900)));
     setTimeout(scheduleSpawn, (900 + Math.random() * 700) / Math.max(0.55, roomy));
   }, 3600);
-}, 13200);
+}, 12200);
 
 // ── Slop noise audio ──────────────────────────────────────────────────────────
 // Every piece of slop that passes through the feed is turned into noise: its

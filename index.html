@@ -398,7 +398,8 @@ function showSubhead(parts) {
       const span = document.createElement('span');
       span.className = 'part noise-text' + (i ? ' later' : '');
       span.textContent = text;
-      span.innerHTML = span.innerHTML.replace('snoozAI', '<span class="brand">snoozAI</span>');
+      // the name keeps its casing, and the line breaks right after it
+      span.innerHTML = span.innerHTML.replace(/snoozAI\s*/, '<span class="brand">snoozAI</span><br>');
       subEl.appendChild(span);
       if (i) setTimeout(() => span.classList.remove('later'), BEAT_MS * i);
     });

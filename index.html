@@ -35,14 +35,39 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 1.5s ease;
+      padding-bottom: 9rem;
     }
+    /* ── Sound machine ── */
+    #machine {
+      position: relative;
+      width: min(94vw, calc(58vh * 1000 / 560), 1150px);
+      aspect-ratio: 1000 / 560;
+    }
+    #machine svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
     #title {
+      position: absolute;
+      left: 14%; width: 72%; top: 57%; height: 32%;
+      display: flex; align-items: center; justify-content: center;
       font-weight: 800;
       letter-spacing: -0.02em;
       text-align: center;
       line-height: 0.93;
       /* font-size set by JS */
     }
+    #machine-knob {
+      position: absolute;
+      left: 50%; top: 30.4%;
+      width: 22%; aspect-ratio: 2.4 / 1;
+      transform: translate(-50%, -50%);
+      border: none; background: transparent; border-radius: 50%;
+      cursor: pointer;
+      pointer-events: all;
+    }
+    #machine-knob:focus-visible { outline: 2px solid rgba(0,0,0,0.5); outline-offset: 4px; }
+    #led { fill: #c9c9c9; transition: fill 0.4s, filter 0.4s; }
+    #machine.on #led { fill: #6fdc8c; filter: drop-shadow(0 0 6px #6fdc8c); }
+    #knob-cap { transition: transform 0.15s; transform-origin: 500px 170px; }
+    #machine-knob:active ~ svg #knob-cap { transform: scale(0.94); }
     #subhead {
       margin-top: 1.8rem;
       font-size: clamp(0.85rem, 1.8vw, 1.2rem);
@@ -92,6 +117,7 @@
       align-items: center; gap: 0.65rem;
       pointer-events: none;
     }
+    #noise-label, #noise-btn { white-space: nowrap; }
     #noise-label {
       font-size: 0.68rem;
       color: rgba(0, 0, 0, 0.28);
@@ -130,7 +156,38 @@
 <body>
 
 <div id="splash">
-  <h1 id="title" class="noise-text">SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</h1>
+  <div id="machine">
+    <button id="machine-knob" onclick="toggleNoise()" aria-label="Turn slop noise on or off"></button>
+    <svg viewBox="0 0 1000 560" aria-hidden="true">
+      <defs>
+        <linearGradient id="body-shade" x1="0" x2="1">
+          <stop offset="0" stop-color="#cfcfcf"/><stop offset="0.18" stop-color="#ececec"/>
+          <stop offset="0.45" stop-color="#f8f8f8"/><stop offset="0.8" stop-color="#e6e6e6"/>
+          <stop offset="1" stop-color="#c4c4c4"/>
+        </linearGradient>
+        <radialGradient id="cap-shade" cx="0.45" cy="0.35" r="0.75">
+          <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e2e2e2"/>
+        </radialGradient>
+        <radialGradient id="knob-shade" cx="0.4" cy="0.3" r="0.8">
+          <stop offset="0" stop-color="#fdfdfd"/><stop offset="1" stop-color="#d4d4d4"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="500" cy="528" rx="455" ry="26" fill="rgba(0,0,0,0.10)"/>
+      <path d="M60 170 L60 420 A440 90 0 0 0 940 420 L940 170 Z" fill="url(#body-shade)" stroke="#bdbdbd" stroke-width="1.5"/>
+      <g stroke="#6a6a6a" stroke-linecap="round" opacity="0.75">
+        <line x1="69.6" y1="206.7" x2="69.6" y2="238.7" stroke-width="1.9"/><line x1="77.0" y1="212.8" x2="77.0" y2="244.8" stroke-width="2.5"/><line x1="86.5" y1="218.8" x2="86.5" y2="250.8" stroke-width="3.1"/><line x1="98.0" y1="224.6" x2="98.0" y2="256.6" stroke-width="3.7"/><line x1="111.5" y1="230.3" x2="111.5" y2="262.3" stroke-width="4.2"/><line x1="126.9" y1="235.7" x2="126.9" y2="267.7" stroke-width="4.8"/><line x1="144.0" y1="240.9" x2="144.0" y2="272.9" stroke-width="5.3"/><line x1="162.9" y1="245.9" x2="162.9" y2="277.9" stroke-width="5.8"/><line x1="183.5" y1="250.5" x2="183.5" y2="282.5" stroke-width="6.3"/><line x1="205.6" y1="254.9" x2="205.6" y2="286.9" stroke-width="6.7"/><line x1="229.1" y1="258.9" x2="229.1" y2="290.9" stroke-width="7.1"/><line x1="254.0" y1="262.6" x2="254.0" y2="294.6" stroke-width="7.5"/><line x1="280.0" y1="265.9" x2="280.0" y2="297.9" stroke-width="7.8"/><line x1="307.1" y1="268.9" x2="307.1" y2="300.9" stroke-width="8.1"/><line x1="335.2" y1="271.4" x2="335.2" y2="303.4" stroke-width="8.3"/><line x1="364.0" y1="273.6" x2="364.0" y2="305.6" stroke-width="8.6"/><line x1="393.6" y1="275.3" x2="393.6" y2="307.3" stroke-width="8.7"/><line x1="423.6" y1="276.6" x2="423.6" y2="308.6" stroke-width="8.9"/><line x1="454.0" y1="277.5" x2="454.0" y2="309.5" stroke-width="9.0"/><line x1="484.6" y1="277.9" x2="484.6" y2="309.9" stroke-width="9.0"/><line x1="515.4" y1="277.9" x2="515.4" y2="309.9" stroke-width="9.0"/><line x1="546.0" y1="277.5" x2="546.0" y2="309.5" stroke-width="9.0"/><line x1="576.4" y1="276.6" x2="576.4" y2="308.6" stroke-width="8.9"/><line x1="606.4" y1="275.3" x2="606.4" y2="307.3" stroke-width="8.7"/><line x1="636.0" y1="273.6" x2="636.0" y2="305.6" stroke-width="8.6"/><line x1="664.8" y1="271.4" x2="664.8" y2="303.4" stroke-width="8.3"/><line x1="692.9" y1="268.9" x2="692.9" y2="300.9" stroke-width="8.1"/><line x1="720.0" y1="265.9" x2="720.0" y2="297.9" stroke-width="7.8"/><line x1="746.0" y1="262.6" x2="746.0" y2="294.6" stroke-width="7.5"/><line x1="770.9" y1="258.9" x2="770.9" y2="290.9" stroke-width="7.1"/><line x1="794.4" y1="254.9" x2="794.4" y2="286.9" stroke-width="6.7"/><line x1="816.5" y1="250.5" x2="816.5" y2="282.5" stroke-width="6.3"/><line x1="837.1" y1="245.9" x2="837.1" y2="277.9" stroke-width="5.8"/><line x1="856.0" y1="240.9" x2="856.0" y2="272.9" stroke-width="5.3"/><line x1="873.1" y1="235.7" x2="873.1" y2="267.7" stroke-width="4.8"/><line x1="888.5" y1="230.3" x2="888.5" y2="262.3" stroke-width="4.2"/><line x1="902.0" y1="224.6" x2="902.0" y2="256.6" stroke-width="3.7"/><line x1="913.5" y1="218.8" x2="913.5" y2="250.8" stroke-width="3.1"/><line x1="923.0" y1="212.8" x2="923.0" y2="244.8" stroke-width="2.5"/><line x1="930.4" y1="206.7" x2="930.4" y2="238.7" stroke-width="1.9"/>
+      </g>
+      <ellipse cx="500" cy="170" rx="440" ry="90" fill="url(#cap-shade)" stroke="#bdbdbd" stroke-width="1.5"/>
+      <ellipse cx="500" cy="170" rx="330" ry="66" fill="none" stroke="rgba(0,0,0,0.07)" stroke-width="2"/>
+      <ellipse cx="500" cy="176" rx="80" ry="22" fill="rgba(0,0,0,0.10)"/>
+      <g id="knob-cap">
+        <ellipse cx="500" cy="170" rx="74" ry="20" fill="url(#knob-shade)" stroke="#c2c2c2" stroke-width="1.5"/>
+      </g>
+      <circle id="led" cx="610" cy="186" r="5"/>
+      <path d="M60 420 A440 90 0 0 0 940 420" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="3"/>
+    </svg>
+    <h1 id="title" class="noise-text"><span>SLOP&nbsp;'TIL<br>YOU&nbsp;DROP</span></h1>
+  </div>
   <p id="subhead"></p>
 </div>
 
@@ -165,18 +222,21 @@
   setInterval(tick, 220);
 })();
 
-// ── Fit title to screen width ─────────────────────────────────────────────────
+// ── Fit title onto the front of the machine ──────────────────────────────────
 function fitTitle() {
   const lines = ["SLOP 'TIL", "YOU DROP"];
+  const box = document.getElementById('title');
   const tc = document.createElement('canvas').getContext('2d');
-  const target = window.innerWidth * 0.97;
-  let size = 10;
+  const maxW = box.clientWidth, maxH = box.clientHeight;
+  let size = 8;
   while (size < 800) {
-    tc.font = `800 ${size + 4}px system-ui, -apple-system, sans-serif`;
-    if (Math.max(...lines.map(l => tc.measureText(l).width)) > target) break;
-    size += 4;
+    const next = size + 2;
+    tc.font = `800 ${next}px -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif`;
+    const w = Math.max(...lines.map(l => tc.measureText(l).width)) * 1.04;
+    if (w > maxW || next * 0.93 * lines.length > maxH) break;
+    size = next;
   }
-  document.getElementById('title').style.fontSize = size + 'px';
+  box.style.fontSize = size + 'px';
 }
 fitTitle();
 window.addEventListener('resize', fitTitle);
@@ -468,10 +528,12 @@ function toggleNoise() {
     scheduleChunks();
     schedulerId = setInterval(scheduleChunks, 500);
     noiseOn = true;
+    document.getElementById('machine')?.classList.add('on');
     btn.classList.add('on');
     btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;slop noise';
   } else {
     noiseOn = false;
+    document.getElementById('machine')?.classList.remove('on');
     clearInterval(schedulerId);
     masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
     masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);

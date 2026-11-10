@@ -83,6 +83,7 @@
     /* each part of a headline line fades in on its own beat */
     #subhead .part { display: block; transition: opacity 0.9s ease; }
     #subhead .part.later { opacity: 0; }
+    #subhead .brand { text-transform: none; }   /* "snoozAI" keeps its casing so the AI stands out */
     /* ── Sound machine ── */
     #machine {
       position: relative;
@@ -379,8 +380,8 @@ window.addEventListener('resize', fitTitle);
 // ── Splash + sequential subheads ──────────────────────────────────────────────
 // Each line can have parts; later parts appear a beat after the first.
 const SUBHEADS = [
-  ["AI is already white noise,", "might as well use it to fall asleep"],
-  ["Let your new agentic friend Snoozi bore you into an algorithmic slumber"]
+  ["AI is already white noise.", "Might as well use it to fall asleep."],
+  ["Let your new friend snoozAI bore you into algorithmic slumber."]
 ];
 const BEAT_MS = 1500;
 const splash  = document.getElementById('splash');
@@ -397,6 +398,7 @@ function showSubhead(parts) {
       const span = document.createElement('span');
       span.className = 'part noise-text' + (i ? ' later' : '');
       span.textContent = text;
+      span.innerHTML = span.innerHTML.replace('snoozAI', '<span class="brand">snoozAI</span>');
       subEl.appendChild(span);
       if (i) setTimeout(() => span.classList.remove('later'), BEAT_MS * i);
     });

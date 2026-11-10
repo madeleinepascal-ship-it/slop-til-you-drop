@@ -74,9 +74,12 @@
       background: #fff;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 1.5s ease;
+      transition: opacity 1.5s ease, background-color 2.5s ease;
       padding-bottom: 9rem;
     }
+    #splash.settled { background-color: transparent; }
+    #splash.settled #title, #splash.settled #subhead { opacity: 0 !important; transition: opacity 1.8s ease; }
+    #machine-wrap { transition: transform 2.8s cubic-bezier(.45,0,.25,1); }
     /* ── Sound machine ── */
     #machine {
       position: relative;
@@ -124,26 +127,37 @@
     }
     .slop-item {
       position: absolute;
-      font-weight: 800;
-      line-height: 1.04;
-      letter-spacing: -0.01em;
-      animation: riseUp var(--dur, 16s) linear forwards;
-      will-change: transform, opacity;
+      transform: translate(-50%, -50%);
+      font-weight: 700;
+      line-height: 1.18;
+      letter-spacing: 0;
+      text-align: center;
+      opacity: 0;
+      will-change: transform, opacity, filter;
+      animation: grain-drift 60s linear infinite;
     }
     .item-tag {
       display: block;
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       font-weight: 400;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(0, 0, 0, 0.22);
-      margin-bottom: 0.5rem;
+      color: rgba(0, 0, 0, 0.18);
+      -webkit-text-fill-color: rgba(0, 0, 0, 0.18);
+      margin-bottom: 0.45rem;
     }
-    @keyframes riseUp {
-      0%   { opacity: 0; transform: translateY(0); }
-      6%   { opacity: 1; }
-      88%  { opacity: 1; }
-      100% { opacity: 0; transform: translateY(calc(-100vh - 900px)); }
+    /* the grain slides slowly instead of flickering */
+    @keyframes grain-drift { from { background-position: 0 0; } to { background-position: 640px 360px; } }
+    /* static rings that ripple out from under the machine as it digests slop */
+    .static-ripple {
+      position: absolute;
+      background-image: var(--noise-url);
+      background-size: 100vw 100vh;
+      background-attachment: fixed;
+      -webkit-mask-image: radial-gradient(ellipse closest-side, transparent 72%, #000 86%, transparent 100%);
+              mask-image: radial-gradient(ellipse closest-side, transparent 72%, #000 86%, transparent 100%);
+      opacity: 0;
+      pointer-events: none;
     }
 
     /* ── Controls ── */
@@ -195,6 +209,7 @@
 
 <div id="splash">
   <h1 id="title" class="noise-text">SLOP TIL YOU DROP</h1>
+  <div id="machine-wrap">
   <div id="machine">
     <button id="machine-knob" onclick="toggleNoise()" aria-label="Turn slop noise on or off"></button>
     <div id="zzz" aria-hidden="true"><span class="z noise-text">z</span><span class="z noise-text">z</span><span class="z noise-text">Z</span></div>
@@ -237,6 +252,7 @@
       <path d="M60 420 A440 90 0 0 0 940 420" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="3"/>
     </svg>
   </div>
+  </div>
   <p id="subhead"></p>
 </div>
 
@@ -274,10 +290,21 @@
   }
   const pick = prev => { let f; do { f = frames[Math.random() * FRAMES | 0]; } while (f === prev); return f; };
 
-  // Page-wide texture: slow drift
-  let slow = frames[0];
-  document.documentElement.style.setProperty('--noise-url', slow);
-  setInterval(() => { slow = pick(slow); document.documentElement.style.setProperty('--noise-url', slow); }, 220);
+  // Page-wide texture (slop, Zs, ripples): a soft, low-contrast grain that
+  // never flickers; movement comes from slowly sliding it instead.
+  const small = document.createElement('canvas');
+  small.width = NW / 2; small.height = NH / 2;
+  const sctx = small.getContext('2d');
+  const sid = sctx.createImageData(small.width, small.height);
+  for (let i = 0; i < sid.data.length; i += 4) {
+    const v = 150 + (Math.random() - 0.5) * 110 | 0;
+    sid.data[i] = sid.data[i+1] = sid.data[i+2] = v;
+    sid.data[i+3] = 255;
+  }
+  sctx.putImageData(sid, 0, 0);
+  nctx.imageSmoothingEnabled = true;
+  nctx.drawImage(small, 0, 0, NW, NH);
+  document.documentElement.style.setProperty('--noise-url', `url('${nc.toDataURL()}')`);
 
   // Headline: fast TV static (gentler when the viewer prefers reduced motion)
   const title = document.getElementById('title');
@@ -285,7 +312,7 @@
   const FAST_MS = reduce ? 400 : 55;
   let fast = frames[1], last = 0;
   (function flicker(now) {
-    if (!document.body.contains(title)) return; // splash removed
+    if (title.closest('.settled')) return; // headline has faded away
     if (now - last >= FAST_MS) {
       last = now;
       fast = pick(fast);
@@ -340,11 +367,23 @@ setTimeout(() => showSubhead(SUBHEADS[0]), 1200);
 setTimeout(() => showSubhead(SUBHEADS[1]), 4200);
 setTimeout(() => showSubhead(SUBHEADS[2]), 7200);
 
-// Fade splash out after all three shown
+// After the three subheads, the headline fades and the sleeping machine
+// glides to the middle of the screen, where it stays while the slop plays.
+const machineWrap = document.getElementById('machine-wrap');
+let machineDy = 0;
+function centerMachine() {
+  if (!splash.classList.contains('settled')) return;
+  const r = machineWrap.getBoundingClientRect();
+  const controlsTop = document.getElementById('controls').getBoundingClientRect().top;
+  const target = Math.min(window.innerHeight / 2, controlsTop / 2 + 10);
+  machineDy += target - (r.top + r.height / 2);
+  machineWrap.style.transform = `translateY(${machineDy}px)`;
+}
 setTimeout(() => {
-  splash.style.opacity = '0';
-  setTimeout(() => splash.remove(), 1500);
+  splash.classList.add('settled');
+  centerMachine();
 }, 10200);
+window.addEventListener('resize', () => requestAnimationFrame(centerMachine));
 
 // ── API sources ───────────────────────────────────────────────────────────────
 const SOURCES = [
@@ -470,51 +509,91 @@ const feed     = document.getElementById('feed');
 let paused     = false;
 const pauseBtn = document.getElementById('pause-btn');
 
-function spawnItem(startY) {
+const machineEl = document.getElementById('machine');
+
+// Where slop goes in: the top of the machine, by the knob and vents
+function intakePoint() {
+  const r = machineEl.getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height * 0.32, r };
+}
+
+function staticRipple() {
+  const { r } = intakePoint();
+  const el = document.createElement('div');
+  el.className = 'static-ripple';
+  const w = r.width * 1.05, h = r.height * 0.55;
+  el.style.cssText = `left:${r.left + r.width / 2 - w / 2}px;top:${r.top + r.height * 0.78 - h / 2}px;width:${w}px;height:${h}px`;
+  feed.appendChild(el);
+  el.animate(
+    [{ transform: 'scale(0.9)', opacity: 0 }, { opacity: 0.55, offset: 0.2 }, { transform: 'scale(1.9)', opacity: 0 }],
+    { duration: 6500, easing: 'cubic-bezier(.2,.6,.3,1)' }
+  ).onfinish = () => el.remove();
+}
+
+function spawnItem() {
   const item = nextItem();
   const el   = document.createElement('div');
   el.className = 'slop-item noise-text';
-
-  // Shorter text gets blown up closer to title scale; longer text shrinks to still fit/wrap.
-  const fsize = Math.min(6.2, Math.max(1.6, 7.2 - item.text.length / 30)) + Math.random() * 0.4;
-  const maxW  = window.innerWidth * (0.34 + Math.random() * 0.48);
-  const x     = 10 + Math.random() * Math.max(0, window.innerWidth - maxW - 20);
-  const y     = startY !== undefined ? startY : window.innerHeight + 10;
-  const dur   = 11 + Math.random() * 9;
-
-  el.style.cssText = `left:${x}px;top:${y}px;max-width:${maxW}px;font-size:${fsize}rem`;
-  el.style.setProperty('--dur', dur + 's');
-  if (paused) el.style.animationPlayState = 'paused';
-
   el.innerHTML = `<span class="item-tag">${item.tag}</span>${item.text.replace(/\n/g, '<br>')}`;
+
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const shrink = Math.min(1, Math.max(0.62, vw / 1100));
+  const fsize = Math.min(2.2, Math.max(1.05, 2.6 - item.text.length / 110)) * shrink;
+  const maxW  = Math.min(440, Math.max(150, vw * 0.3));
+  el.style.cssText = `left:0;top:0;width:${maxW}px;font-size:${fsize}rem`;
   feed.appendChild(el);
-  queueForAudio(item);
-  setTimeout(() => el.remove(), (dur + 0.5) * 1000);
+  const h = el.offsetHeight;
+
+  // start somewhere around the edges, fully on screen, above the controls,
+  // and not on top of the machine or other slop
+  const floor = document.getElementById('controls').getBoundingClientRect().top - 18;
+  const avoid = [machineEl.getBoundingClientRect(), ...[...feed.querySelectorAll('.slop-item')]
+    .filter(o => o !== el).map(o => o.getBoundingClientRect())];
+  const overlaps = (x, y) => avoid.some(r =>
+    x - maxW / 2 < r.right && x + maxW / 2 > r.left && y - h / 2 < r.bottom && y + h / 2 > r.top);
+  let x, y;
+  for (let tries = 0; tries < 14; tries++) {
+    const a = Math.random() * Math.PI * 2;
+    x = Math.min(vw - maxW / 2 - 12, Math.max(maxW / 2 + 12, vw / 2 + Math.cos(a) * vw * 0.4));
+    y = Math.min(floor - h / 2, Math.max(h / 2 + 14, vh * 0.42 + Math.sin(a) * vh * 0.4));
+    if (!overlaps(x, y)) break;
+    if (tries === 13) { el.remove(); return; }   // no room right now; try again next time
+  }
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+
+  const { x: tx, y: ty } = intakePoint();
+  const dx = tx - x, dy = ty - y;
+  const dur = 17000 + Math.random() * 7000;
+  const anim = el.animate([
+    { transform: 'translate(-50%, -50%) scale(1)', opacity: 0, filter: 'blur(2px)' },
+    { opacity: 0.75, filter: 'blur(0px)', offset: 0.18 },
+    { opacity: 0.6, offset: 0.75 },
+    { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.1)`, opacity: 0, filter: 'blur(3px)' }
+  ], { duration: dur, easing: 'cubic-bezier(.4,0,.7,1)', fill: 'forwards' });
+  if (paused) anim.pause();
+  anim.onfinish = () => {      // swallowed: it becomes part of the noise
+    el.remove();
+    queueForAudio(item);
+    staticRipple();
+  };
 }
 
 function togglePause() {
   paused = !paused;
-  feed.querySelectorAll('.slop-item').forEach(el => {
-    el.style.animationPlayState = paused ? 'paused' : 'running';
-  });
+  feed.getAnimations({ subtree: true }).forEach(a => paused ? a.pause() : a.play());
   pauseBtn.innerHTML = paused ? '&#9654;&nbsp;resume' : '&#9646;&#9646;&nbsp;pause';
 }
 
-// Start slop just as splash begins fading — burst fills whole screen, then steady stream
+// Once the machine settles, slop starts drifting in: a few quickly, then a calm trickle
 setTimeout(() => {
-  // Initial burst spread across full viewport
-  const INIT = 24;
-  for (let i = 0; i < INIT; i++) {
-    setTimeout(() => spawnItem(Math.random() * window.innerHeight * 1.1), i * 120);
-  }
-
-  // Fast ongoing stream from bottom
-  let spawnDelay = INIT * 120 + 200;
-  (function scheduleSpawn() {
+  for (let i = 0; i < 5; i++) setTimeout(() => { if (!paused) spawnItem(); }, i * 900);
+  setTimeout(function scheduleSpawn() {
     if (!paused) spawnItem();
-    setTimeout(scheduleSpawn, 850 + Math.random() * 550);
-  }());
-}, 9700);
+    // calmer trickle on smaller screens
+    const roomy = Math.min(1, Math.sqrt(window.innerWidth * window.innerHeight / (1440 * 900)));
+    setTimeout(scheduleSpawn, (2400 + Math.random() * 1600) / Math.max(0.55, roomy));
+  }, 5000);
+}, 10600);
 
 // ── Slop noise audio ──────────────────────────────────────────────────────────
 // Every piece of slop that passes through the feed is turned into noise: its

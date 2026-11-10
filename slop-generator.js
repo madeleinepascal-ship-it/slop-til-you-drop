@@ -1,140 +1,409 @@
-// ── AI slop generator ─────────────────────────────────────────────────────────
-// Endless LinkedIn-post / chatbot-answer style copy, built from the tropes of
-// AI writing: em dashes, "it's not X — it's Y", delving, tapestries, humble
-// announcements, emoji bullets, hashtags and a call to engage.
+// ── LinkedIn slop generator ───────────────────────────────────────────────────
+// Every piece of slop is a LinkedIn thought-leadership post.
+// The corpus and the six post structures (story, listicle, hot take, humble brag,
+// motivational, contrarian) come from Bot Leadership:
+// https://github.com/madeleinepascal-ship-it/botleadership (src/corpus.ts,
+// src/generator.ts). Extra em-dash-heavy hooks and insights are mixed in below.
 (function () {
-  const pick = a => a[Math.random() * a.length | 0];
-  const some = (a, n) => [...a].sort(() => Math.random() - 0.5).slice(0, n);
-  const chance = p => Math.random() < p;
+  const pick  = a => a[Math.random() * a.length | 0];
+  const pickN = (a, n) => [...a].sort(() => Math.random() - 0.5).slice(0, Math.min(n, a.length));
 
-  const HOOKS = [
-    "I almost didn't post this.", "Unpopular opinion:", "Let's be honest —", "Nobody talks about this, but",
-    "Here's the thing:", "Stop scrolling. This matters.", "In today's fast-paced world,",
-    "I've been reflecting a lot lately.", "Hot take 🔥", "This might ruffle some feathers.",
-    "I was rejected from 47 jobs. Today I'm a Chief Vision Officer.", "Read this twice.",
-    "I need to share something vulnerable.", "Real talk:", "Most people won't understand this.",
-    "Yesterday I fired my best employee. Hear me out.", "I cried in an airport lounge today. Here's why.",
-    "My 4-year-old taught me more about leadership than my MBA.", "Can we talk about this for a second?",
-    "Big news. 🚀", "I'm humbled and honored to announce", "After 3 years of silence — I'm back.",
+  // ── Bot Leadership corpus ──
+  const openingHooks = [
+    "I got fired last week.",
+    "I just turned down a $500K offer.",
+    "Yesterday, my 5-year-old taught me more about leadership than any MBA ever could.",
+    "I've been silent about this for too long.",
+    "Unpopular opinion:",
+    "Hot take:",
+    "Most people won't tell you this.",
+    "I failed. Publicly. Spectacularly.",
+    "10 years ago, I was sleeping on my friend's couch.",
+    "The CEO pulled me aside and said something I'll never forget.",
+    "I almost quit last Tuesday.",
+    "This post will make some people uncomfortable.",
+    "I wasn't going to share this, but here goes.",
+    "Everyone told me I was crazy.",
+    "I just had the most humbling experience of my career.",
+    "Read this before you give up.",
+    "Stop scrolling. This is important.",
+    "I built a $10M business from my kitchen table.",
+    "The best advice I ever got came from a taxi driver.",
+    "I deleted LinkedIn from my phone for 30 days. Here's what happened.",
+    "3 years ago I was broke. Today I run a 7-figure company.",
+    "A janitor at my office taught me everything about leadership.",
+    "I just walked out of a board meeting.",
+    "Here's a truth that no one in tech wants to hear.",
+    "My biggest regret? Not starting sooner.",
+    "I gave my employees unlimited PTO. The results shocked me.",
+    "Someone told me I'd never make it.",
+    "I'm going to say what everyone's thinking but no one's saying.",
+    "Just had coffee with a Fortune 500 CEO. Mind = blown.",
+    "I've interviewed 1,000+ candidates. Here's what I've learned.",
+    "The #1 skill they don't teach you in business school:",
+    "I made my first million at 25. Then I lost it all.",
+    "You're not lazy. You're not unmotivated. You're just doing it wrong.",
+    "I said no to a meeting with Jeff Bezos. Here's why.",
+    "This morning I cried at my desk. And I'm not ashamed.",
+    "I posted this same advice 2 years ago and no one listened.",
+    "Confession: I have imposter syndrome. Every. Single. Day.",
   ];
-  const STORIES = [
-    "Last week, a junior developer asked me a question I'll never forget.",
-    "On my way to the airport, my Uber driver said something profound.",
-    "At 3am, staring at the ceiling, it hit me.",
-    "I spent 12 years building my company. Then everything changed.",
-    "My grandmother never used a computer — but she understood product-market fit better than anyone I've met.",
-    "During a 6am ice bath, I had a realization.",
-    "A barista misspelled my name today. It was the best leadership lesson of my career.",
-    "My dog doesn't check Slack. My dog is thriving.",
-    "I asked ChatGPT to describe my leadership style. It said \"transformative.\" I wept.",
-    "I turned down a seven-figure offer last Tuesday — and I'd do it again.",
-    "Our intern stayed late to help a colleague. Nobody asked her to.",
-    "I took my first vacation in nine years. On day two, I opened my laptop.",
+  const vulnerablePivots = [
+    "And that's when it hit me.",
+    "But here's what nobody tells you:",
+    "That failure? It was the best thing that ever happened to me.",
+    "And in that moment, everything changed.",
+    "But here's the thing...",
+    "What I didn't realize at the time was this:",
+    "And then I had an epiphany.",
+    "That's when I learned the most important lesson of my career.",
+    "But looking back, I wouldn't change a thing.",
+    "Here's the real truth:",
+    "And do you know what I discovered?",
+    "The plot twist?",
+    "But life had other plans.",
+    "That moment of failure taught me something no success ever could.",
+    "Then something unexpected happened.",
+    "And that's when I stopped following the rules.",
   ];
-  const NOT_X = [
-    ["It's not about the hustle", "it's about the heart"], ["It's not a setback", "it's a setup"],
-    ["Sleep isn't a luxury", "it's a strategy"], ["This isn't just a product", "it's a movement"],
-    ["It's not a job", "it's a journey"], ["You're not tired", "you're unaligned"],
-    ["It isn't noise", "it's signal"], ["It's not burnout", "it's growth wearing a disguise"],
-    ["It's not about working harder", "it's about working with intention"],
-    ["Rest isn't the opposite of productivity", "it's the foundation"],
-    ["It's not a meeting", "it's an alignment opportunity"], ["It's not content", "it's connection"],
-    ["This isn't a pivot", "it's an evolution"], ["Failure isn't the end", "it's data"],
-    ["It's not a nap", "it's a strategic recharge"],
+  const insights = [
+    "Culture eats strategy for breakfast.",
+    "Your network is your net worth.",
+    "People don't leave companies. They leave managers.",
+    "Done is better than perfect.",
+    "The only constant is change.",
+    "It's not about the destination. It's about the journey.",
+    "Hire for attitude, train for skill.",
+    "Revenue is vanity, profit is sanity, cash is reality.",
+    "If you're the smartest person in the room, you're in the wrong room.",
+    "The best time to start was yesterday. The second best time is now.",
+    "Work smarter, not harder.",
+    "Fail fast, fail forward.",
+    "Innovation happens at the intersection of creativity and constraint.",
+    "Leadership is not about being in charge. It's about taking care of those in your charge.",
+    "Your brand is what people say about you when you're not in the room.",
+    "The future belongs to those who learn more skills and combine them in creative ways.",
+    "Disruption doesn't come from the corner office.",
+    "The riches are in the niches.",
+    "A players hire A players. B players hire C players.",
+    "Compound interest is the eighth wonder of the world.",
+    "Execution is everything.",
+    "Authenticity is the new currency.",
+    "Speed wins. Move fast and break things.",
+    "Customer obsession always beats competitor obsession.",
+    "The best leaders are the best listeners.",
+    "It's not about having time. It's about making time.",
+    "Success leaves clues.",
+    "The market doesn't care about your feelings.",
+    "Data is the new oil.",
+    "Focus on impact, not hours.",
   ];
-  const VERBS = ["unlock", "leverage", "elevate", "empower", "navigate", "foster", "delve into", "supercharge",
-    "reimagine", "harness", "optimize", "democratize", "amplify", "unpack", "operationalize", "embrace"];
-  const OBJECTS = ["the full potential of your team", "a rich tapestry of insights", "the ever-evolving landscape of work",
-    "meaningful connections", "authentic engagement", "a culture of excellence", "holistic synergy",
-    "actionable insights", "your north star", "the intersection of innovation and empathy",
-    "the human side of AI", "your authentic personal brand", "a growth mindset", "next-level outcomes",
-    "the future of work", "deep, restorative sleep at scale", "cross-functional alignment", "the power of storytelling"];
-  const ADJ = ["game-changing", "transformative", "seamless", "robust", "cutting-edge", "pivotal", "invaluable",
-    "groundbreaking", "holistic", "scalable", "best-in-class", "paradigm-shifting", "mission-critical", "AI-powered"];
-  const LESSONS = [
-    "Consistency beats intensity — every single time.", "Your network is your net worth — but your rest is your interest.",
-    "Done is better than perfect — but rested is better than done.", "Feedback is a gift — unwrap it daily.",
-    "Empathy isn't soft — it's a competitive advantage.", "Leaders don't create followers — they create leaders.",
-    "Culture eats strategy for breakfast — and synergy for lunch.", "Show up. Even when it's hard. Especially when it's hard.",
-    "Vulnerability is the new KPI.", "Your comfort zone is a beautiful place — but nothing ever grows there.",
-    "Gratitude is the ultimate productivity hack.", "The best investment you can make — is in yourself.",
-    "Small wins compound — quietly, then all at once.", "Listen to understand — not to respond.",
-    "Hire for attitude — train for skill.", "Be so good they can't ignore you — then be kind anyway.",
-    "Clarity is kindness.", "Energy is contagious — make sure yours is worth catching.",
+  const humbleBrags = [
+    "When I was keynoting at Davos last month, someone asked me",
+    "After building 3 successful startups, I can tell you",
+    "My team just hit $50M ARR, and the secret was simple",
+    "Having advised dozens of Fortune 500 CEOs, I've noticed",
+    "While reviewing my portfolio of angel investments, it occurred to me",
+    "As someone who gets 500+ DMs a day asking for advice",
+    "After being featured in Forbes for the third time, I realized",
+    "When I look at my team of 200+ brilliant people",
+    "Fresh off my TED talk, I want to share",
+    "Having bootstrapped my way from nothing to an 8-figure exit",
+    "As I was boarding my flight to speak at Web Summit",
+    "My book just hit the NYT bestseller list, and honestly",
+    "After turning down my 4th acquisition offer this year",
+    "When Harvard Business Review asked me to write a piece",
+    "As someone who's been on both sides of the table",
+    "While mentoring my 50th founder this year, I noticed",
+    "After my viral post last week (10M+ impressions, wow)",
+    "When my company was named to the Inc. 5000 list again",
+    "Just finished recording my podcast (now #1 in Business!)",
+    "As someone who reads 100+ books a year",
   ];
-  const BULLETS = ["✅", "👉", "🔹", "💡", "🚀", "✨", "📈", "🎯", "→"];
-  const CLOSERS = ["Let that sink in.", "Agree? 👇", "Thoughts?", "Read that again.", "♻️ Repost if this resonated.",
-    "What would you add? 💬", "Follow for more insights like this. 🚀", "Food for thought. 🧠", "And that's okay.",
-    "Be the change. ✨", "Drop a 🙌 if you agree.", "Who needs to hear this today?", "The future is now. Are you ready?",
-    "Tag someone who needs this. 👇", "Stay hungry. Stay humble. 🙏", "Onwards and upwards. 📈"];
-  const TAGS = ["#Leadership", "#Growth", "#Mindset", "#AI", "#Innovation", "#FutureOfWork", "#Gratitude", "#Hustle",
-    "#Synergy", "#Sleep", "#Wellness", "#ThoughtLeadership", "#PersonalBranding", "#OpenToWork", "#Motivation",
-    "#Resilience", "#GrowthMindset", "#Productivity", "#Authenticity", "#AgileLeadership", "#Disruption"];
-  const ASSIST_OPEN = ["Great question! 🌟", "Absolutely! Here's a comprehensive overview:", "Certainly! Let's delve into this.",
-    "What a thoughtful question!", "Of course! Here's a breakdown:", "That's a fascinating topic — let's explore it together."];
-  const ASSIST_MID = ["It's important to note that", "It's worth mentioning that", "In many ways,", "At its core,",
-    "When it comes to sleep,", "In the ever-evolving world of rest,", "From a holistic perspective,"];
-  const ASSIST_CLOSE = ["I hope this helps! Let me know if you'd like me to expand on any of these points. 😊",
-    "In conclusion, it's a nuanced topic with no one-size-fits-all answer.",
-    "Ultimately, the best approach depends on your unique needs and goals.",
-    "Would you like me to turn this into a bulleted list, a haiku, or a 12-week action plan?",
-    "Remember — every journey begins with a single step. 🌱"];
-  const TOPICS = ["sleep", "leadership", "rest", "the future of work", "productivity", "AI", "burnout", "gratitude",
-    "remote work", "networking", "failure", "self-care", "content creation", "the hiring process", "your morning routine"];
+  const punchyLines = [
+    "Let that sink in.",
+    "Read that again.",
+    "This is the way.",
+    "Full stop.",
+    "Period.",
+    "No exceptions.",
+    "Think about that.",
+    "I'll say it louder for the people in the back.",
+    "This changed everything for me.",
+    "And it can change everything for you too.",
+    "Agree?",
+    "Am I wrong?",
+    "It really is that simple.",
+    "Most people will scroll past this.",
+    "The ones who get it, get it.",
+    "Save this post. You'll thank me later.",
+    "Share this with someone who needs to hear it.",
+    "This took me 10 years to learn. I'm giving it to you for free.",
+    "Your future self will thank you.",
+    "Don't just like this post. Act on it.",
+    "Stop overthinking. Start doing.",
+    "The ball is in your court.",
+    "No one is coming to save you.",
+    "You already know what you need to do.",
+    "The time is now.",
+    "Repost if you agree.",
+  ];
+  const listicleItems = [
+    "Wake up at 4:30 AM",
+    "Journal for 20 minutes",
+    "Say no more than you say yes",
+    "Invest in yourself before investing in anything else",
+    "Read 30 minutes a day (no excuses)",
+    "Network relentlessly (your net worth = your network)",
+    "Embrace failure as feedback",
+    "Automate everything you can",
+    "Hire people smarter than you",
+    "Protect your energy like your life depends on it",
+    "Ship fast. Iterate faster",
+    "Build in public",
+    "Document, don't create",
+    "Focus on one thing at a time (multitasking is a myth)",
+    "Take cold showers (trust me on this)",
+    "Meditate daily (non-negotiable)",
+    "Delete social media (yes, the irony)",
+    "Stop attending meetings that could be emails",
+    "Have a morning routine and guard it fiercely",
+    "Write every single day",
+    "Say thank you more often",
+    "Learn to sell (everything is sales)",
+    "Find a mentor (or become one)",
+    "Set boundaries without guilt",
+    "Prioritize sleep (I know, I know)",
+    "Develop your personal brand",
+    "Give before you take",
+    "Celebrate small wins",
+    "Stay curious, stay hungry",
+    "Surround yourself with people who challenge you",
+  ];
+  const storySubjects = [
+    "a homeless man outside Whole Foods",
+    "my Uber driver",
+    "a barista at my local coffee shop",
+    "my 6-year-old daughter",
+    "a stranger on a plane",
+    "the security guard at my office",
+    "an intern on their first day",
+    "my grandmother",
+    "a monk I met in Bali",
+    "a street vendor in Mumbai",
+    "the waiter at a Michelin-star restaurant",
+    "a retired Navy SEAL",
+    "my Lyft driver (who turned out to be a PhD)",
+    "a kid selling lemonade on my street",
+    "the cleaning lady at my co-working space",
+    "an Uber driver who was also a former CEO",
+  ];
+  const storyLessons = [
+    "showed me what true leadership looks like",
+    "taught me more about business than my MBA",
+    "reminded me why I started",
+    "changed my entire perspective on success",
+    "gave me the best career advice I've ever received",
+    "demonstrated what hustle really means",
+    "proved that titles don't define leaders",
+    "showed me the power of resilience",
+    "made me rethink everything I thought I knew about work",
+    "taught me the value of simplicity",
+    "reminded me that empathy is a superpower",
+    "showed me that grit beats talent every time",
+  ];
+  const buzzwords = [
+    "synergy",
+    "leverage",
+    "disruption",
+    "ecosystem",
+    "paradigm shift",
+    "north star",
+    "value proposition",
+    "thought leadership",
+    "scalability",
+    "alignment",
+    "bandwidth",
+    "deep dive",
+    "circle back",
+    "move the needle",
+    "low-hanging fruit",
+    "game-changer",
+    "bleeding edge",
+    "blue ocean",
+    "stakeholder",
+    "deliverables",
+    "KPIs",
+    "OKRs",
+    "ROI",
+    "AI-powered",
+    "Web3",
+    "metaverse",
+    "blockchain",
+    "machine learning",
+    "growth hacking",
+    "product-market fit",
+    "minimum viable product",
+    "agile methodology",
+    "digital transformation",
+    "future-proofing",
+    "customer-centric",
+    "data-driven",
+    "results-oriented",
+    "cross-functional",
+    "mission-critical",
+    "best-in-class",
+    "holistic approach",
+    "vertical integration",
+    "horizontal scaling",
+  ];
+  const hashtags = [
+    "#ThoughtLeadership",
+    "#Leadership",
+    "#Innovation",
+    "#Entrepreneurship",
+    "#StartupLife",
+    "#GrowthMindset",
+    "#Success",
+    "#Motivation",
+    "#BusinessStrategy",
+    "#FutureOfWork",
+    "#PersonalBranding",
+    "#Hustle",
+    "#CEOmindset",
+    "#LinkedInCreator",
+    "#ContentCreator",
+    "#Networking",
+    "#CareerAdvice",
+    "#ProfessionalDevelopment",
+    "#LifeLessons",
+    "#WorkLifeBalance",
+    "#Productivity",
+    "#Mindfulness",
+    "#Resilience",
+    "#DigitalTransformation",
+    "#AI",
+    "#Tech",
+    "#SaaS",
+    "#B2B",
+    "#Sales",
+    "#Marketing",
+    "#Culture",
+    "#Hiring",
+    "#TalentAcquisition",
+    "#RemoteWork",
+    "#MentalHealth",
+    "#Diversity",
+    "#Inclusion",
+    "#Sustainability",
+    "#Impact",
+    "#Purpose",
+    "#Authenticity",
+    "#AgreeOrDisagree",
+    "#Thoughts",
+    "#Repost",
+  ];
+  const closingCTAs = [
+    "What's the best career advice you've ever received? Drop it in the comments.",
+    "Agree or disagree? Let me know in the comments.",
+    "Follow me for more insights like this.",
+    "If this resonated with you, share it with your network.",
+    "Tag someone who needs to hear this today.",
+    "What would you add to this list? I'd love to hear your thoughts.",
+    "Hit the bell on my profile so you never miss a post.",
+    "DM me 'GROWTH' and I'll send you my free 47-page guide.",
+    "Which one of these hit hardest? Comment below.",
+    "I'm building a community of like-minded leaders. Link in bio.",
+    "This is just 1% of what I share with my newsletter subscribers.",
+    "Like this post if you agree. Comment if you disagree. Either way, I win.",
+    "P.S. I'm hosting a free webinar on this topic next week. Link in comments.",
+    "If you made it this far, you're already ahead of 99% of people.",
+    "Repost to help someone in your network who's struggling.",
+    "The algorithm rewards engagement, so drop a comment and let's connect!",
+    "Smash that like button if this hit different.",
+    "I post content like this every day. Follow for more.",
+  ];
 
-  const cap = s => s[0].toUpperCase() + s.slice(1);
-  const an = w => (/^[aeiouAEIOU]/.test(w) ? 'an ' : 'a ') + w;
-  const notX = () => { const [a, b] = pick(NOT_X); return `${a} — ${b}.`; };
-  const verbLine = () => `${cap(pick(VERBS))} ${pick(OBJECTS)} — and watch what happens.`;
-  const hashtags = n => some(TAGS, n).join(' ');
+  // ── Extra em-dash slop ──
+  openingHooks.push(
+    "I almost didn't post this — but here we are.",
+    "Let's be honest —",
+    "I cried in an airport lounge today. Here's why.",
+    "I need to share something vulnerable — and it might surprise you.",
+    "After 3 years of silence — I'm back.",
+    "I took a nap at 2pm today. My calendar was full. I closed my eyes anyway.",
+    "I'm humbled — and honestly a little emotional — to share some news.",
+  );
+  insights.push(
+    "It's not about the hustle — it's about the heart.",
+    "It's not a setback — it's a setup.",
+    "Sleep isn't a luxury — it's a strategy.",
+    "It's not a job — it's a journey.",
+    "You're not tired — you're unaligned.",
+    "It isn't noise — it's signal.",
+    "Rest isn't the opposite of productivity — it's the foundation.",
+    "Failure isn't the end — it's data.",
+    "Empathy isn't soft — it's a competitive advantage.",
+    "Consistency beats intensity — every single time.",
+    "Your network is your net worth — but your rest is your interest.",
+    "Leaders don't create followers — they create leaders.",
+    "Vulnerability is the new KPI — and the ROI is infinite.",
+  );
+  punchyLines.push("And honestly — that's okay.", "Read that again — slowly.", "Not a flex — just a lesson.");
 
-  const MAKERS = [
-    // classic LinkedIn post
-    () => ({ tag: 'LINKEDIN POST', text: [
-      pick(HOOKS), pick(STORIES), notX(),
-      "Here's what I learned:",
-      ...some(LESSONS, 3).map(l => `${pick(BULLETS)} ${l}`),
-      pick(CLOSERS), hashtags(3)].join('\n') }),
-    // humble announcement
-    () => ({ tag: 'PRODUCT LAUNCH', text: [
-      `I'm ${pick(['thrilled', 'humbled', 'beyond excited', 'incredibly proud'])} to announce our ${pick(ADJ)}, ${pick(ADJ)} platform — built to ${pick(VERBS)} ${pick(OBJECTS)}.`,
-      `This isn't just a launch — it's a ${pick(['movement', 'mindset', 'new chapter', 'revolution in rest'])}.`,
-      `Huge thanks to my incredible team. 🙏`, pick(CLOSERS), hashtags(4)].join('\n') }),
-    // chatbot answer
-    () => ({ tag: 'AI ASSISTANT', text: [
-      pick(ASSIST_OPEN),
-      `${pick(ASSIST_MID)} ${pick(TOPICS)} is ${an(pick(ADJ))} and multifaceted topic — one that touches on ${pick(OBJECTS)}, ${pick(OBJECTS)}, and ${pick(OBJECTS)}.`,
-      `1. ${cap(pick(VERBS))} ${pick(OBJECTS)}`, `2. ${cap(pick(VERBS))} ${pick(OBJECTS)}`, `3. ${cap(pick(VERBS))} ${pick(OBJECTS)}`,
-      pick(ASSIST_CLOSE)].join('\n') }),
-    // aphorism stack
-    () => ({ tag: 'THOUGHT LEADERSHIP', text: [notX(), notX(), notX(), pick(LESSONS), pick(CLOSERS)].join('\n') }),
-    // listicle carousel
-    () => ({ tag: 'MOTIVATIONAL CAROUSEL', text: [
-      `${3 + (Math.random() * 5 | 0)} ${pick(ADJ)} habits of highly ${pick(['effective', 'rested', 'aligned', 'intentional'])} leaders 🧵`,
-      ...some(LESSONS, 4).map((l, i) => `${i + 1}/ ${l}`), pick(CLOSERS)].join('\n') }),
-    // newsletter intro
-    () => ({ tag: 'NEWSLETTER', text:
-      `In today's fast-paced world, ${pick(TOPICS)} has never been more important. As we navigate the ever-evolving landscape of ${pick(TOPICS)}, ` +
-      `it's crucial to ${pick(VERBS)} ${pick(OBJECTS)} — not just for today, but for tomorrow. In this edition, we'll delve into ` +
-      `${pick(OBJECTS)}, explore ${pick(OBJECTS)}, and ultimately ${pick(VERBS)} ${pick(OBJECTS)}. Let's dive in. 🌊` }),
-    // short punchy
-    () => ({ tag: 'AI-GENERATED INSIGHT', text: `${pick(HOOKS)} ${notX()} ${verbLine()} ${pick(CLOSERS)}` }),
-  ];
+  const STYLE_TAGS = {
+    story: 'LINKEDIN · STORY', listicle: 'LINKEDIN · LISTICLE', hot_take: 'LINKEDIN · HOT TAKE',
+    humble_brag: 'LINKEDIN · HUMBLE BRAG', motivational: 'LINKEDIN · MOTIVATIONAL', contrarian: 'LINKEDIN · CONTRARIAN',
+  };
+  const tags = (n = 4) => pickN(hashtags, n).join(' ');
+  // one sentence per line, the LinkedIn way (blank lines are dropped to keep it compact on screen)
+  const post = lines => lines.filter(Boolean).join('\n');
 
-  window.makeSlop = () => pick(MAKERS)();
+  const STYLES = {
+    story: () => {
+      return post([pick(openingHooks), `I met ${pick(storySubjects)} last week.`, 'We talked for 10 minutes.',
+        pick(vulnerablePivots), `This person ${pick(storyLessons)}.`, pick(insights), pick(punchyLines), pick(closingCTAs), tags()]);
+    },
+    listicle: () => {
+      const n = 5 + (Math.random() * 3 | 0);
+      return post([`${n} things I wish someone told me ${5 + (Math.random() * 10 | 0)} years ago:`,
+        ...pickN(listicleItems, n).map((item, i) => `${i + 1}. ${item}`), pick(punchyLines), pick(closingCTAs), tags()]);
+    },
+    hot_take: () => post([pick(['Unpopular opinion:', 'Hot take:', 'Controversial take:', 'I said what I said:']),
+      pick(insights), pick(punchyLines), pick(vulnerablePivots), pick(insights), pick(punchyLines), pick(closingCTAs), tags()]),
+    humble_brag: () => post([pick(openingHooks),
+      `${pick(humbleBrags)}: the most important thing in business isn't ${pick(buzzwords)}.`, `It's ${pick(buzzwords)}.`,
+      pick(vulnerablePivots), pick(insights), pick(punchyLines), pick(punchyLines), pick(closingCTAs), tags()]),
+    motivational: () => post([pick(openingHooks), pick(vulnerablePivots), pick(insights), "Here's the truth:",
+      pick(insights), pick(punchyLines), 'You are one decision away from a completely different life.',
+      pick(punchyLines), pick(closingCTAs), tags()]),
+    contrarian: () => {
+      const target = pick(["hustle culture", "morning routines", "networking events", "business school", "remote work",
+        "return to office", "personal branding", "thought leadership", "growth hacking", "productivity hacks",
+        "side hustles", "passive income", "corporate culture", "startup culture", "meetings"]);
+      return post([`Stop glorifying ${target}.`, pick(punchyLines), pick(vulnerablePivots),
+        `I spent years chasing ${target}. It nearly destroyed me.`, pick(insights), `The real secret? ${pick(insights)}`,
+        pick(punchyLines), pick(closingCTAs), tags()]);
+    },
+  };
+  const styleNames = Object.keys(STYLES);
 
-  // A run-on paragraph of pure slop for the background wall
+  window.makeSlop = () => {
+    const style = pick(styleNames);
+    return { tag: STYLE_TAGS[style], text: STYLES[style]() };
+  };
+
+  // A run-on paragraph of pure LinkedIn slop for the background wall
   window.makeSlopParagraph = () => {
-    const bits = [];
-    const n = 6 + (Math.random() * 6 | 0);
+    const parts = [];
+    const n = 7 + (Math.random() * 6 | 0);
     for (let i = 0; i < n; i++) {
-      bits.push(pick([
-        () => pick(HOOKS), notX, verbLine, () => pick(LESSONS), () => pick(STORIES), () => pick(CLOSERS),
-        () => `${pick(ASSIST_MID)} ${pick(TOPICS)} — at its core — is about ${pick(OBJECTS)}.`,
-        () => `This ${pick(ADJ)} approach doesn't just ${pick(VERBS)} ${pick(OBJECTS)} — it helps you ${pick(VERBS)} ${pick(OBJECTS)}.`,
-        () => hashtags(2 + (Math.random() * 3 | 0)),
+      parts.push(pick([
+        () => pick(openingHooks), () => pick(vulnerablePivots), () => pick(insights), () => pick(insights),
+        () => pick(punchyLines), () => pick(closingCTAs), () => `${pick(humbleBrags)} — ${pick(insights).toLowerCase()}`,
+        () => `I met ${pick(storySubjects)} — and they ${pick(storyLessons)}.`, () => tags(2 + (Math.random() * 3 | 0)),
       ])());
     }
-    return bits.join(' ');
+    return parts.join(' ');
   };
 })();

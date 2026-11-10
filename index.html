@@ -414,8 +414,8 @@ setTimeout(() => {
 window.addEventListener('resize', () => requestAnimationFrame(centerMachine));
 
 // ── Slop supply ───────────────────────────────────────────────────────────────
-// Mostly freshly generated AI slop (slop-generator.js), mixed with the
-// hand-written pieces in data/slop.json.
+// All LinkedIn slop: mostly freshly generated (slop-generator.js, built on the
+// Bot Leadership corpus), mixed with hand-written LinkedIn posts from data/slop.json.
 let fallback  = [];
 let fallbackIdx = 0;
 
@@ -429,14 +429,17 @@ function shuffle(arr) {
 }
 
 function nextItem() {
-  if (fallback.length && Math.random() < 0.3) {
+  if (fallback.length && Math.random() < 0.15) {
     if (fallbackIdx >= fallback.length) { fallback = shuffle(fallback); fallbackIdx = 0; }
     return fallback[fallbackIdx++];
   }
   return makeSlop();
 }
 
-fetch('data/slop.json').then(r => r.json()).then(data => { fallback = shuffle(data); }).catch(() => {});
+// only the hand-written pieces that are LinkedIn posts
+const LINKEDIN_TAGS = ['LINKEDIN POST', 'THOUGHT LEADERSHIP', 'MOTIVATIONAL CAROUSEL', 'PRODUCT LAUNCH'];
+fetch('data/slop.json').then(r => r.json())
+  .then(data => { fallback = shuffle(data.filter(d => LINKEDIN_TAGS.includes(d.tag))); }).catch(() => {});
 
 // ── Feed ──────────────────────────────────────────────────────────────────────
 const feed     = document.getElementById('feed');
@@ -476,6 +479,12 @@ function spawnItem() {
   const maxW  = Math.min(440, Math.max(150, vw * 0.3));
   el.style.cssText = `left:0;top:0;width:${maxW}px;font-size:${fsize}rem`;
   feed.appendChild(el);
+  // long posts get cut off LinkedIn-style so they fit the space: "…see more"
+  const lines = item.text.split('\n');
+  const tooTall = () => el.offsetHeight > vh * (vw < 700 ? 0.24 : 0.34);
+  for (let keep = lines.length - 1; tooTall() && keep >= 2; keep--) {
+    el.innerHTML = `<span class="item-tag">${item.tag}</span>${lines.slice(0, keep).join('<br>')}<br>…see more`;
+  }
   const h = el.offsetHeight;
 
   // start somewhere around the edges, fully on screen, above the controls,

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slop til you drop</title>
+  <title>SLOP TIL YOU DROP</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -40,14 +40,12 @@
     /* ── Sound machine ── */
     #machine {
       position: relative;
-      width: min(94vw, calc(58vh * 1000 / 560), 1150px);
+      width: min(90vw, calc(34vh * 1000 / 560), 950px);
       aspect-ratio: 1000 / 560;
     }
     #machine svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
     #title {
-      position: absolute;
-      left: 14%; width: 72%; top: 57%; height: 32%;
-      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 2vh;
       font-weight: 800;
       letter-spacing: -0.02em;
       text-align: center;
@@ -156,6 +154,7 @@
 <body>
 
 <div id="splash">
+  <h1 id="title" class="noise-text">SLOP TIL YOU DROP</h1>
   <div id="machine">
     <button id="machine-knob" onclick="toggleNoise()" aria-label="Turn slop noise on or off"></button>
     <svg viewBox="0 0 1000 560" aria-hidden="true">
@@ -172,7 +171,6 @@
           <stop offset="0" stop-color="#fdfdfd"/><stop offset="1" stop-color="#d4d4d4"/>
         </radialGradient>
       </defs>
-      <ellipse cx="500" cy="528" rx="455" ry="26" fill="rgba(0,0,0,0.10)"/>
       <path d="M60 170 L60 420 A440 90 0 0 0 940 420 L940 170 Z" fill="url(#body-shade)" stroke="#bdbdbd" stroke-width="1.5"/>
       <g stroke="#6a6a6a" stroke-linecap="round" opacity="0.75">
         <line x1="69.6" y1="206.7" x2="69.6" y2="238.7" stroke-width="1.9"/><line x1="77.0" y1="212.8" x2="77.0" y2="244.8" stroke-width="2.5"/><line x1="86.5" y1="218.8" x2="86.5" y2="250.8" stroke-width="3.1"/><line x1="98.0" y1="224.6" x2="98.0" y2="256.6" stroke-width="3.7"/><line x1="111.5" y1="230.3" x2="111.5" y2="262.3" stroke-width="4.2"/><line x1="126.9" y1="235.7" x2="126.9" y2="267.7" stroke-width="4.8"/><line x1="144.0" y1="240.9" x2="144.0" y2="272.9" stroke-width="5.3"/><line x1="162.9" y1="245.9" x2="162.9" y2="277.9" stroke-width="5.8"/><line x1="183.5" y1="250.5" x2="183.5" y2="282.5" stroke-width="6.3"/><line x1="205.6" y1="254.9" x2="205.6" y2="286.9" stroke-width="6.7"/><line x1="229.1" y1="258.9" x2="229.1" y2="290.9" stroke-width="7.1"/><line x1="254.0" y1="262.6" x2="254.0" y2="294.6" stroke-width="7.5"/><line x1="280.0" y1="265.9" x2="280.0" y2="297.9" stroke-width="7.8"/><line x1="307.1" y1="268.9" x2="307.1" y2="300.9" stroke-width="8.1"/><line x1="335.2" y1="271.4" x2="335.2" y2="303.4" stroke-width="8.3"/><line x1="364.0" y1="273.6" x2="364.0" y2="305.6" stroke-width="8.6"/><line x1="393.6" y1="275.3" x2="393.6" y2="307.3" stroke-width="8.7"/><line x1="423.6" y1="276.6" x2="423.6" y2="308.6" stroke-width="8.9"/><line x1="454.0" y1="277.5" x2="454.0" y2="309.5" stroke-width="9.0"/><line x1="484.6" y1="277.9" x2="484.6" y2="309.9" stroke-width="9.0"/><line x1="515.4" y1="277.9" x2="515.4" y2="309.9" stroke-width="9.0"/><line x1="546.0" y1="277.5" x2="546.0" y2="309.5" stroke-width="9.0"/><line x1="576.4" y1="276.6" x2="576.4" y2="308.6" stroke-width="8.9"/><line x1="606.4" y1="275.3" x2="606.4" y2="307.3" stroke-width="8.7"/><line x1="636.0" y1="273.6" x2="636.0" y2="305.6" stroke-width="8.6"/><line x1="664.8" y1="271.4" x2="664.8" y2="303.4" stroke-width="8.3"/><line x1="692.9" y1="268.9" x2="692.9" y2="300.9" stroke-width="8.1"/><line x1="720.0" y1="265.9" x2="720.0" y2="297.9" stroke-width="7.8"/><line x1="746.0" y1="262.6" x2="746.0" y2="294.6" stroke-width="7.5"/><line x1="770.9" y1="258.9" x2="770.9" y2="290.9" stroke-width="7.1"/><line x1="794.4" y1="254.9" x2="794.4" y2="286.9" stroke-width="6.7"/><line x1="816.5" y1="250.5" x2="816.5" y2="282.5" stroke-width="6.3"/><line x1="837.1" y1="245.9" x2="837.1" y2="277.9" stroke-width="5.8"/><line x1="856.0" y1="240.9" x2="856.0" y2="272.9" stroke-width="5.3"/><line x1="873.1" y1="235.7" x2="873.1" y2="267.7" stroke-width="4.8"/><line x1="888.5" y1="230.3" x2="888.5" y2="262.3" stroke-width="4.2"/><line x1="902.0" y1="224.6" x2="902.0" y2="256.6" stroke-width="3.7"/><line x1="913.5" y1="218.8" x2="913.5" y2="250.8" stroke-width="3.1"/><line x1="923.0" y1="212.8" x2="923.0" y2="244.8" stroke-width="2.5"/><line x1="930.4" y1="206.7" x2="930.4" y2="238.7" stroke-width="1.9"/>
@@ -186,7 +184,6 @@
       <circle id="led" cx="610" cy="186" r="5"/>
       <path d="M60 420 A440 90 0 0 0 940 420" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="3"/>
     </svg>
-    <h1 id="title" class="noise-text"><span>Slop&nbsp;til<br>you&nbsp;drop</span></h1>
   </div>
   <p id="subhead"></p>
 </div>
@@ -222,21 +219,25 @@
   setInterval(tick, 220);
 })();
 
-// ── Fit title onto the front of the machine ──────────────────────────────────
+// ── Fit title above the machine: one or two lines, whichever is bigger ──────
 function fitTitle() {
-  const lines = ["Slop til", "you drop"];
   const box = document.getElementById('title');
   const tc = document.createElement('canvas').getContext('2d');
-  const maxW = box.clientWidth, maxH = box.clientHeight;
-  let size = 8;
-  while (size < 800) {
-    const next = size + 2;
-    tc.font = `800 ${next}px -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif`;
-    const w = Math.max(...lines.map(l => tc.measureText(l).width)) * 1.04;
-    if (w > maxW || next * 1.02 * lines.length > maxH) break;
-    size = next;
-  }
-  box.style.fontSize = size + 'px';
+  const maxW = window.innerWidth * 0.95, maxH = window.innerHeight * 0.36;
+  const fit = lines => {
+    let size = 8;
+    while (size < 1000) {
+      const next = size + 2;
+      tc.font = `800 ${next}px -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif`;
+      const w = Math.max(...lines.map(l => tc.measureText(l).width)) * 1.03;
+      if (w > maxW || next * 0.95 * lines.length > maxH) break;
+      size = next;
+    }
+    return size;
+  };
+  const one = fit(['SLOP TIL YOU DROP']), two = fit(['SLOP TIL', 'YOU DROP']);
+  box.innerHTML = two > one ? 'SLOP&nbsp;TIL<br>YOU&nbsp;DROP' : 'SLOP TIL YOU DROP';
+  box.style.fontSize = Math.max(one, two) + 'px';
 }
 fitTitle();
 window.addEventListener('resize', fitTitle);

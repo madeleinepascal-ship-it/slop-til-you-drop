@@ -31,7 +31,7 @@
     #mouth { animation: snore 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
     @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
     @keyframes snore   { 0%, 100% { transform: scale(0.75, 0.6); } 50% { transform: scale(1.1, 1.25); } }
-    #zzz { position: absolute; left: 60%; top: -6%; width: 26%; height: 22%; pointer-events: none; }
+    #zzz { position: absolute; left: 60%; top: 0%; width: 26%; height: 18%; pointer-events: none; }
     .z {
       position: absolute; bottom: 0; left: 0;
       font-weight: 800; line-height: 1;
@@ -46,7 +46,7 @@
       0%   { opacity: 0; transform: translate(0, 0) scale(0.7) rotate(-8deg); }
       15%  { opacity: 1; }
       75%  { opacity: 1; }
-      100% { opacity: 0; transform: translate(170%, -95%) scale(1.1) rotate(10deg); }
+      100% { opacity: 0; transform: translate(170%, -60%) scale(1.05) rotate(10deg); }
     }
     /* ── Machine sways gently as it sleeps, and hums faintly when on ── */
     #machine { animation: sway 5s ease-in-out infinite; transform-origin: 50% 100%; }
@@ -80,15 +80,18 @@
     #splash.settled { background-color: transparent; }
     #splash.settled #title, #splash.settled #subhead { opacity: 0 !important; transition: opacity 1.8s ease; }
     #machine-wrap { transition: transform 2.8s cubic-bezier(.45,0,.25,1); }
+    /* each part of a headline line fades in on its own beat */
+    #subhead .part { display: block; transition: opacity 0.9s ease; }
+    #subhead .part.later { opacity: 0; }
     /* ── Sound machine ── */
     #machine {
       position: relative;
-      width: min(90vw, calc(29vh * 1000 / 560), 900px);
+      width: min(100vw, calc(38vh * 1000 / 560), 1300px);
       aspect-ratio: 1000 / 560;
     }
     #machine svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
     #title {
-      margin-bottom: 4vh;
+      margin-bottom: 2.5vh;
       font-weight: 800;
       letter-spacing: -0.02em;
       text-align: center;
@@ -110,10 +113,10 @@
     #knob-cap { transition: transform 0.15s; transform-origin: 500px 170px; }
     #machine-knob:active ~ svg #knob-cap { transform: scale(0.94); }
     #subhead {
-      margin-top: 3.5vh;
+      margin-top: 2.5vh;
       width: min(92vw, 1100px);
       height: 3.3em;               /* room for up to three lines, so nothing jumps */
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
       text-align: center;
       font-weight: 800;
       font-size: clamp(1.15rem, min(3.4vw, 4.2vh), 2.9rem);
@@ -279,7 +282,7 @@
     </svg>
   </div>
   </div>
-  <p id="subhead" class="noise-text"></p>
+  <p id="subhead"></p>
 </div>
 
 <div id="feed"><div id="slop-wall" aria-hidden="true"><div id="slop-wall-inner" class="noise-text"></div></div></div>
@@ -354,7 +357,7 @@
 function fitTitle() {
   const box = document.getElementById('title');
   const tc = document.createElement('canvas').getContext('2d');
-  const maxW = window.innerWidth * 0.95, maxH = window.innerHeight * 0.27;
+  const maxW = window.innerWidth * 0.95, maxH = window.innerHeight * 0.22;
   const fit = lines => {
     let size = 8;
     while (size < 1000) {
@@ -374,37 +377,51 @@ fitTitle();
 window.addEventListener('resize', fitTitle);
 
 // ── Splash + sequential subheads ──────────────────────────────────────────────
+// Each line can have parts; later parts appear a beat after the first.
 const SUBHEADS = [
-  "AI is already white noise, might as well use it to fall asleep",
-  "Ready to drift into an algorithmic slumber?",
-  "Slop til you drop"
+  ["AI is already white noise,", "might as well use it to fall asleep"],
+  ["Let your new agentic friend Snoozi bore you into an algorithmic slumber"]
 ];
+const BEAT_MS = 1500;
 const splash  = document.getElementById('splash');
 const subEl   = document.getElementById('subhead');
 
 // Fade splash in
 requestAnimationFrame(() => requestAnimationFrame(() => { splash.style.opacity = '1'; }));
 
-function showSubhead(text) {
+function showSubhead(parts) {
   subEl.style.opacity = '0';
-  setTimeout(() => { subEl.textContent = text; subEl.style.opacity = '1'; }, 800);
+  setTimeout(() => {
+    subEl.innerHTML = '';
+    parts.forEach((text, i) => {
+      const span = document.createElement('span');
+      span.className = 'part noise-text' + (i ? ' later' : '');
+      span.textContent = text;
+      subEl.appendChild(span);
+      if (i) setTimeout(() => span.classList.remove('later'), BEAT_MS * i);
+    });
+    subEl.style.opacity = '1';
+  }, 800);
 }
 
 setTimeout(() => showSubhead(SUBHEADS[0]), 1200);
-setTimeout(() => showSubhead(SUBHEADS[1]), 5200);
-setTimeout(() => showSubhead(SUBHEADS[2]), 8700);
+setTimeout(() => showSubhead(SUBHEADS[1]), 6200);
 
 // After the three subheads, the headline fades and the sleeping machine
 // glides to the middle of the screen, where it stays while the slop plays.
 const machineWrap = document.getElementById('machine-wrap');
-let machineDy = 0;
+let machineDy = 0, machineScale = 1;
 function centerMachine() {
   if (!splash.classList.contains('settled')) return;
   const r = machineWrap.getBoundingClientRect();
+  const w0 = r.width / machineScale, h0 = r.height / machineScale;      // size before scaling
   const controlsTop = document.getElementById('controls').getBoundingClientRect().top;
-  const target = Math.min(window.innerHeight / 2, controlsTop / 2 + 10);
+  const top = window.innerHeight * 0.05, bottom = controlsTop - 20;
+  // as big as fits: within the screen width, and (with room for the Zs above) above the controls
+  machineScale = Math.max(1, Math.min(1.35, (window.innerWidth * 0.98) / w0, (bottom - top) / (h0 * 1.3)));
+  const target = (top + bottom) / 2 + h0 * machineScale * 0.12;        // nudge down to leave room for the Zs
   machineDy += target - (r.top + r.height / 2);
-  machineWrap.style.transform = `translateY(${machineDy}px)`;
+  machineWrap.style.transform = `translateY(${machineDy}px) scale(${machineScale})`;
   document.getElementById('slop-wall').style.setProperty('--fade', (controlsTop - 24) + 'px');
 }
 setTimeout(() => {

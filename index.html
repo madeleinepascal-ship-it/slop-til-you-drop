@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SLOP TIL YOU DROP</title>
+  <title>SLOP ’TIL YOU DROP</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -238,7 +238,7 @@
 <body>
 
 <div id="splash">
-  <h1 id="title" class="noise-text">SLOP TIL YOU DROP</h1>
+  <h1 id="title" class="noise-text">SLOP ’TIL YOU DROP</h1>
   <div id="machine-wrap">
   <div id="machine">
     <button id="machine-knob" onclick="toggleNoise()" aria-label="Turn slop noise on or off"></button>
@@ -370,8 +370,8 @@ function fitTitle() {
     }
     return size;
   };
-  const one = fit(['SLOP TIL YOU DROP']), two = fit(['SLOP TIL', 'YOU DROP']);
-  box.innerHTML = two > one ? 'SLOP&nbsp;TIL<br>YOU&nbsp;DROP' : 'SLOP TIL YOU DROP';
+  const one = fit(['SLOP ’TIL YOU DROP']), two = fit(['SLOP ’TIL', 'YOU DROP']);
+  box.innerHTML = two > one ? 'SLOP&nbsp;’TIL<br>YOU&nbsp;DROP' : 'SLOP ’TIL YOU DROP';
   box.style.fontSize = Math.max(one, two) + 'px';
 }
 fitTitle();

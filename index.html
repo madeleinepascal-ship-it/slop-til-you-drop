@@ -665,9 +665,6 @@ function scheduleChunks() {
     const item = audioQueue.shift() || nextItem();
     const t = Math.max(nextChunkAt, audioCtx.currentTime + 0.05);
     nextChunkAt = scheduleChunk(audioCtx, filterNode, t, item);
-    setTimeout(() => {
-      if (noiseOn) document.getElementById('noise-label').textContent = `now humming: ${item.tag}`;
-    }, Math.max(0, (t + FADE_SEC - audioCtx.currentTime) * 1000));
   }
 }
 
@@ -745,7 +742,6 @@ function toggleNoise() {
     masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
     btn.classList.remove('on');
     btn.innerHTML = '&#9654;&nbsp;&nbsp;slop noise';
-    document.getElementById('noise-label').textContent = 'turn the slop into white noise';
   }
 }
 </script>

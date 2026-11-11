@@ -671,9 +671,49 @@ function scheduleChunks() {
   }
 }
 
+// ── Play through the silent switch on phones ─────────────────────────────────
+// iPhones mute web audio when the ringer is on silent, because by default it
+// counts as "ambient" sound. Two fixes, both started from the button tap:
+//  1. Safari 16.4+: declare this page as media playback (ignores the silent switch).
+//  2. Older iPhones: loop a tiny silent <audio> track, which switches the phone
+//     into media playback for the page, so the slop hum is heard too.
+let silentKeepAlive = null;
+function silentWav() {
+  // 0.5s of 8-bit mono silence at 8 kHz, as a WAV data URI
+  const rate = 8000, n = rate / 2, buf = new Uint8Array(44 + n);
+  const dv = new DataView(buf.buffer);
+  const str = (o, t) => [...t].forEach((c, i) => buf[o + i] = c.charCodeAt(0));
+  str(0, 'RIFF'); dv.setUint32(4, 36 + n, true); str(8, 'WAVE'); str(12, 'fmt ');
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, rate, true); dv.setUint32(28, rate, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true);
+  str(36, 'data'); dv.setUint32(40, n, true); buf.fill(128, 44);
+  let bin = ''; buf.forEach(b => bin += String.fromCharCode(b));
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
+function playThroughSilentSwitch() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {}
+  if (!silentKeepAlive) {
+    silentKeepAlive = new Audio(silentWav());
+    silentKeepAlive.loop = true;
+    silentKeepAlive.setAttribute('playsinline', '');
+    silentKeepAlive.setAttribute('x-webkit-airplay', 'deny');
+  }
+  silentKeepAlive.play().catch(() => {});
+}
+// iOS can pause the audio after a call, Siri or switching apps; pick it back up
+function resumeIfNeeded() {
+  if (noiseOn && audioCtx && audioCtx.state !== 'running') {
+    audioCtx.resume().catch(() => {});
+    if (silentKeepAlive && silentKeepAlive.paused) silentKeepAlive.play().catch(() => {});
+  }
+}
+document.addEventListener('visibilitychange', resumeIfNeeded);
+window.addEventListener('pageshow', resumeIfNeeded);
+
 function toggleNoise() {
   const btn = document.getElementById('noise-btn');
   if (!noiseOn) {
+    playThroughSilentSwitch();   // must happen inside the tap, before the audio starts
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       filterNode = audioCtx.createBiquadFilter();
@@ -682,6 +722,7 @@ function toggleNoise() {
       masterGain.gain.value = 0;
       filterNode.connect(masterGain);
       masterGain.connect(audioCtx.destination);
+      audioCtx.onstatechange = resumeIfNeeded;
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
     masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -696,6 +737,7 @@ function toggleNoise() {
     btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;slop noise';
   } else {
     noiseOn = false;
+    if (silentKeepAlive) silentKeepAlive.pause();
     document.getElementById('machine')?.classList.remove('on');
     clearInterval(schedulerId);
     masterGain.gain.cancelScheduledValues(audioCtx.currentTime);

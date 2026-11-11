@@ -197,19 +197,20 @@
       align-items: center; gap: 0.65rem;
       pointer-events: none;
     }
-    /* a soft white glow so the button and label stay readable over the slop */
-    #controls::before {
-      content: ''; position: absolute; inset: -3.2rem -6rem -2.4rem;
-      background: radial-gradient(ellipse closest-side, #fff 0, #fff 58%, rgba(255,255,255,0.85) 75%, rgba(255,255,255,0) 100%);
-      z-index: -1; pointer-events: none;
-    }
     #noise-label, #noise-btn { white-space: nowrap; }
     #noise-label {
-      font-size: 0.68rem;
-      color: rgba(0, 0, 0, 0.28);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.55);
       letter-spacing: 0.12em;
       text-transform: uppercase;
+      background: #fff;                   /* a small pill so it reads over the slop */
+      padding: 0.35rem 0.9rem;
+      border-radius: 99px;
+      opacity: 0;                         /* appears once the intro copy has faded away */
+      transition: opacity 1.4s ease 1.8s;
     }
+    body.intro-done #noise-label { opacity: 1; }
     #noise-btn {
       background: #f4f4f4;
       border: 1.5px solid rgba(0,0,0,0.18);
@@ -293,8 +294,8 @@
 <div id="feed"><div id="slop-wall" aria-hidden="true"><div id="slop-wall-inner" class="noise-text"></div></div></div>
 
 <div id="controls">
-  <div id="noise-label">turn the slop into white noise</div>
-  <button id="noise-btn" onclick="toggleNoise()">&#9654;&nbsp;&nbsp;slop noise</button>
+  <div id="noise-label">slop ’til you drop</div>
+  <button id="noise-btn" onclick="toggleNoise()">&#9654;&nbsp;&nbsp;snoooooozai</button>
   <button id="pause-btn" onclick="togglePause()">&#9646;&#9646;&nbsp;pause</button>
 </div>
 
@@ -442,6 +443,7 @@ function centerMachine() {
 }
 setTimeout(() => {
   splash.classList.add('settled');
+  document.body.classList.add('intro-done');
   centerMachine();
 }, 11800);
 window.addEventListener('resize', () => requestAnimationFrame(centerMachine));
@@ -726,7 +728,7 @@ function toggleNoise() {
     noiseOn = true;
     document.getElementById('machine')?.classList.add('on');
     btn.classList.add('on');
-    btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;slop noise';
+    btn.innerHTML = '&#9646;&#9646;&nbsp;&nbsp;snoooooozai';
   } else {
     noiseOn = false;
     if (silentKeepAlive) silentKeepAlive.pause();
@@ -736,7 +738,7 @@ function toggleNoise() {
     masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
     masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);
     btn.classList.remove('on');
-    btn.innerHTML = '&#9654;&nbsp;&nbsp;slop noise';
+    btn.innerHTML = '&#9654;&nbsp;&nbsp;snoooooozai';
   }
 }
 </script>

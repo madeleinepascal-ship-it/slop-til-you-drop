@@ -81,8 +81,9 @@
     #splash.settled #title, #splash.settled #subhead { opacity: 0 !important; transition: opacity 1.8s ease; }
     #machine-wrap { transition: transform 2.8s cubic-bezier(.45,0,.25,1); }
     /* each part of a headline line fades in on its own beat */
-    #subhead .part { display: block; transition: opacity 0.9s ease; }
-    #subhead .part.later { opacity: 0; }
+    /* each line fades itself (and gets its own layer) so Safari repaints it cleanly */
+    #subhead .part { display: block; transition: opacity 0.8s ease; transform: translateZ(0); will-change: opacity; }
+    #subhead .part.hidden { opacity: 0; }
     #subhead .brand { text-transform: none; }   /* "snoozAI" keeps its casing so the AI stands out */
     /* ── Sound machine ── */
     #machine {
@@ -390,21 +391,31 @@ const subEl   = document.getElementById('subhead');
 // Fade splash in
 requestAnimationFrame(() => requestAnimationFrame(() => { splash.style.opacity = '1'; }));
 
+// Lines hand over cleanly: the old one fades out and is removed completely,
+// a short pause, then the new one fades in (later parts a beat after).
+let subToken = 0;
 function showSubhead(parts) {
-  subEl.style.opacity = '0';
+  const token = ++subToken;
+  subEl.style.opacity = '1';
+  const old = [...subEl.children];
+  old.forEach(el => el.classList.add('hidden'));
   setTimeout(() => {
-    subEl.innerHTML = '';
-    parts.forEach((text, i) => {
+    if (token !== subToken) return;
+    subEl.replaceChildren();                       // old text fully gone before anything new appears
+    const spans = parts.map(text => {
       const span = document.createElement('span');
-      span.className = 'part noise-text' + (i ? ' later' : '');
+      span.className = 'part noise-text hidden';
       span.textContent = text;
       // the name keeps its casing, and the line breaks right after it
       span.innerHTML = span.innerHTML.replace(/snoozAI\s*/, '<span class="brand">snoozAI</span><br>');
       subEl.appendChild(span);
-      if (i) setTimeout(() => span.classList.remove('later'), BEAT_MS * i);
+      return span;
     });
-    subEl.style.opacity = '1';
-  }, 800);
+    void subEl.offsetHeight;                       // commit the hidden state so the fade-in runs
+    spans.forEach((span, i) => setTimeout(() => {
+      if (token === subToken) span.classList.remove('hidden');
+    }, 50 + BEAT_MS * i));
+  }, old.length ? 1100 : 0);                       // 0.8s fade-out + a short pause
 }
 
 setTimeout(() => showSubhead(SUBHEADS[0]), 1200);
